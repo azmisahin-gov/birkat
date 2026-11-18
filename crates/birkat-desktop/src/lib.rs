@@ -23,5 +23,6 @@
 
 pub mod app;
 pub mod screens;
+pub mod wizard;
 
 pub use app::BirkatApp;

@@ -175,11 +175,29 @@ pub struct BirkatApp {
     pub selected_case: Option<String>,
     /// Uygulama başlangıç zamanı.
     pub started_at: Timestamp,
+    /// İlk çalıştırma kurulum sihirbazı (tamamlanınca `None`).
+    pub wizard: Option<crate::wizard::SetupWizard>,
+    /// Sihirbaz: veri kök dizini (metin).
+    pub data_root_text: String,
+    /// Sihirbaz: yedek dizini (metin).
+    pub backup_dir_text: String,
+    /// Sihirbaz: kurum.
+    pub profile_institution: String,
+    /// Sihirbaz: telefon.
+    pub profile_phone: String,
+    /// Sihirbaz: e-posta.
+    pub profile_email: String,
+    /// Sihirbaz: parola tekrarı.
+    pub vault_password_confirm: String,
+    /// Kasa kurtarma anahtarı (sihirbaz üretir; yalnızca bellekte).
+    pub recovery_key: Option<String>,
 }
 
 impl BirkatApp {
     /// Uygulamayı veri köküyle başlatır.
     pub fn new(data_root: PathBuf) -> Self {
+        let data_root_display = data_root.display().to_string();
+        let backup_display = data_root.join("yedekler").display().to_string();
         let mut app = Self {
             data_root,
             store: None,
@@ -203,8 +221,20 @@ impl BirkatApp {
             last_report_dir: None,
             selected_case: None,
             started_at: Timestamp::now(),
+            wizard: None,
+            data_root_text: data_root_display,
+            backup_dir_text: backup_display,
+            profile_institution: String::new(),
+            profile_phone: String::new(),
+            profile_email: String::new(),
+            vault_password_confirm: String::new(),
+            recovery_key: None,
         };
         app.initialize();
+        // İlk çalıştırma: profil veya kasa yoksa sihirbaz gösterilir.
+        if crate::wizard::needs_setup(&app) {
+            app.wizard = Some(crate::wizard::SetupWizard::default());
+        }
         app
     }
 
@@ -652,6 +682,77 @@ impl BirkatApp {
             self.notice(Notice::Info("Veriler yenilendi.".to_string()));
         }
     }
+    /// Sihirbaz profilini kaydeder.
+    pub fn save_wizard_profile(&mut self) {
+        let Some(store) = &mut self.store else {
+            return;
+        };
+        let p = crate::wizard::build_profile_from_wizard(
+            &self.profile_name,
+            &self.profile_title,
+            &self.profile_registry,
+            &self.profile_institution,
+            &self.profile_phone,
+            &self.profile_email,
+        );
+        match store.save_profile(&p) {
+            Ok(()) => self.notice(Notice::Success(format!(
+                "Profil kaydedildi: {}",
+                p.full_name
+            ))),
+            Err(e) => self.notice(Notice::Error(format!("Profil kaydedilemedi: {e}"))),
+        }
+    }
+
+    /// Sihirbaz klasör ayarlarını uygular.
+    pub fn apply_wizard_folders(&mut self) {
+        let yeni_kok = std::path::PathBuf::from(self.data_root_text.trim());
+        if yeni_kok != self.data_root {
+            self.data_root = yeni_kok.clone();
+            // Depoyu yeni konumda yeniden aç.
+            if let Err(e) = std::fs::create_dir_all(&yeni_kok) {
+                self.notice(Notice::Error(format!("Veri dizini oluşturulamadı: {e}")));
+                return;
+            }
+            match CaseStore::open(yeni_kok.join("birkat.db")) {
+                Ok(s) => {
+                    self.store = Some(s);
+                    self.notice(Notice::Success(format!(
+                        "Veri kök dizini: {}",
+                        yeni_kok.display()
+                    )));
+                }
+                Err(e) => {
+                    self.notice(Notice::Error(format!("Veritabanı açılamadı: {e}")));
+                    return;
+                }
+            }
+        }
+        if !self.backup_dir_text.trim().is_empty() {
+            self.settings.backup_dir = Some(self.backup_dir_text.trim().to_string());
+            self.settings.backup_dir = Some(self.backup_dir_text.trim().to_string());
+        }
+        self.refresh_dashboard();
+    }
+
+    /// Kurtarma anahtarı üretir (yalnızca bellekte; hiçbir yere yazılmaz).
+    pub fn generate_recovery_key(&mut self) -> String {
+        use birkat_crypto::SecretKey;
+        let key = SecretKey::generate();
+        let text = key.export_base64();
+        self.recovery_key = Some(text.clone());
+        text
+    }
+
+    /// Sihirbazda belirlenen kasa parolasını uygular.
+    pub fn save_wizard_vault_password(&mut self) {
+        // Kasa anahtarı ilk vaka açıldığında bu parolayla oluşturulur.
+        self.notice(Notice::Success(
+            "Kasa parolası belirlendi. Vaka kasası ilk kullanımda bu parolayla \
+             şifrelenecek."
+                .to_string(),
+        ));
+    }
 }
 
 fn non_empty(s: &str) -> Option<String> {
@@ -738,6 +839,16 @@ impl eframe::App for BirkatApp {
                     }
                 });
             });
+
+        // İlk çalıştırma sihirbazı açıksa ana arayüz yerine sihirbaz gösterilir.
+        if self.wizard.is_some() {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                let mut w = self.wizard.take().expect("sihirbaz açık");
+                w.ui(self, ui);
+                self.wizard = Some(w);
+            });
+            return;
+        }
 
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading(self.screen.title());
