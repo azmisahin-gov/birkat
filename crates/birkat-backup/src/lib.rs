@@ -185,7 +185,7 @@ pub fn create_backup(
     let mut total = 0u64;
     {
         let mut zip = zip::ZipWriter::new(&mut inner);
-        let opts: zip::write::FileOptions<'_, ()> =
+        let opts: zip::write::SimpleFileOptions =
             zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
         // Manifesto dosyasını en son eklemek için önce içerikleri yaz.

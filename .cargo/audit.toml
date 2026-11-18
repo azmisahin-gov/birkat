@@ -1,0 +1,34 @@
+# cargo-audit yapılandırması.
+#
+# Burada listelenen bildirimler GÖZDEN GEÇİRİLMİŞ ve gerekçesiyle kabul
+# edilmiştir. Gizlenen bir güvenlik açığı yoktur; her kayıt için neden
+# kabul edildiği ve hangi azaltımın uygulandığı yazılmıştır.
+#
+# Denetim çalıştırma:
+#   cargo audit
+#
+# Tüm uyarıları (kabul edilenler dahil) görmek için:
+#   cargo audit --show
+
+[advisories]
+# Bakımı bırakılmış (unmaintained) bağımlılıklar. Bunlar güvenlik açığı
+# değildir; ancak izlenmesi gerekir. Her biri için gerekçe aşağıdadır.
+ignore = [
+    # chrono: yalnızca rusqlite'ın "chrono" özelliği üzerinden gelir.
+    # Uygulama kodu chrono API'sini doğrudan kullanmaz (tarih işlemleri
+    # `time` paketiyle yapılır). rusqlite'ın bu özelliği kaldırıldığında
+    # bağımlılık tamamen düşecektir.
+    "RUSTSEC-2026-0543",
+
+    # paste: candle (Whisper çıkarımı) tarafından geçişli olarak çekilir.
+    # Yalnızca derleme zamanı makro paketidir; çalışma zamanı kodu üretmez
+    # ve kullanıcı girdisi işlemez. Candle yeni sürümünde kaldırılması
+    # beklenmektedir.
+    "RUSTSEC-2024-0436",
+
+    # ttf-parser: egui/eframe yazı tipi ayrıştırması için kullanılır.
+    # Uygulama yalnızca paketle birlikte gelen sabit yazı tipini yükler;
+    # kullanıcı tarafından sağlanan yazı tipi dosyası hiçbir zaman
+    # ayrıştırılmaz. Bu nedenle bildirim uygulanabilir değildir.
+    "RUSTSEC-2026-0192",
+]

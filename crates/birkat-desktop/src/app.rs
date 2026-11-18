@@ -388,10 +388,23 @@ impl BirkatApp {
             )));
             return;
         }
-        let engine = birkat_transcription::engine::MockEngine::default();
-        match birkat_app::run_automatic_workflow(ws, store, &[path], &engine, &self.data_root) {
+        let secim = birkat_transcription::select_engine(&self.data_root, self.settings.prefer_gpu);
+        // Motor bilgisini iş akışından önce bildir (ödünç alma sırası).
+        let motor_bildirimi = match secim.kind {
+            birkat_transcription::EngineKind::WhisperCandle => Notice::Info(secim.notice.clone()),
+            birkat_transcription::EngineKind::Mock => Notice::Warning(secim.notice.clone()),
+        };
+        let data_root = self.data_root.clone();
+        match birkat_app::run_automatic_workflow(
+            ws,
+            store,
+            &[path],
+            secim.engine.as_ref(),
+            &data_root,
+        ) {
             Ok(out) => {
                 self.last_workflow_summary = Some(out.summary());
+                self.notice(motor_bildirimi);
                 self.notice(Notice::Success(out.summary()));
                 for w in &out.warnings {
                     self.notice(Notice::Warning(w.clone()));

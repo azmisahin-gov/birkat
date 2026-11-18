@@ -26,7 +26,7 @@ pub fn report_to_docx(report: &ReportDocument) -> Result<Vec<u8>, DocxError> {
     let mut cursor = std::io::Cursor::new(Vec::new());
     {
         let mut zip = zip::ZipWriter::new(&mut cursor);
-        let opts: zip::write::FileOptions<'_, ()> =
+        let opts: zip::write::SimpleFileOptions =
             zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
         zip.start_file("[Content_Types].xml", opts)?;
@@ -331,7 +331,7 @@ mod tests {
         let bytes = report_to_docx(&report()).unwrap();
         let mut zip = zip::ZipArchive::new(std::io::Cursor::new(bytes)).unwrap();
         let names: Vec<String> = (0..zip.len())
-            .map(|i| zip.by_index(i).unwrap().name().to_string())
+            .map(|i| zip.by_index(i).unwrap().name().unwrap().to_string())
             .collect();
         assert!(names.contains(&"[Content_Types].xml".to_string()));
         assert!(names.contains(&"_rels/.rels".to_string()));

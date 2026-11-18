@@ -18,6 +18,7 @@ use crate::model::*;
 use birkat_core::error::{CoreError, Result};
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
+use quick_xml::XmlVersion;
 
 /// Okuma sonucu.
 #[derive(Debug, Clone)]
@@ -180,19 +181,18 @@ pub fn parse_content_xml(xml: &str) -> Result<UdfReadResult> {
             Ok(Event::Empty(e)) => handle_start(&mut st, &e, true),
             Ok(Event::Text(t)) => {
                 if st.in_content_pool {
-                    let text = t
-                        .unescape()
-                        .map(|c| c.into_owned())
-                        .unwrap_or_else(|_| String::from_utf8_lossy(&t).to_string());
-                    st.pool.push_str(&text);
+                    // quick-xml 0.42: metin artık çözülmüş UTF-8 olarak gelir.
+                    st.pool
+                        .push_str(t.xml_content(XmlVersion::Explicit1_0).as_ref());
                 }
             }
             Ok(Event::CData(t)) => {
                 if st.in_content_pool {
-                    st.pool.push_str(&String::from_utf8_lossy(&t));
+                    st.pool
+                        .push_str(t.xml_content(XmlVersion::Explicit1_0).as_ref());
                 }
             }
-            Ok(Event::End(e)) => handle_end(&mut st, local_name(e.name().as_ref()).as_str()),
+            Ok(Event::End(e)) => handle_end(&mut st, e.local_name().as_ref()),
             Ok(Event::Eof) => break,
             Err(e) => {
                 return Err(CoreError::Data(format!("content.xml çözümlenemedi: {e}")));
@@ -226,7 +226,7 @@ pub fn parse_content_xml(xml: &str) -> Result<UdfReadResult> {
 }
 
 fn handle_start(st: &mut ParserState, e: &BytesStart<'_>, _empty: bool) {
-    match local_name(e.name().as_ref()).as_str() {
+    match e.local_name().as_ref() {
         "template" => {
             let m = attrs_map(e);
             st.format_id = m.get("format_id").cloned();
@@ -301,20 +301,12 @@ fn handle_end(st: &mut ParserState, name: &str) {
 
 // --- öznitelik okuyucuları -------------------------------------------------
 
-fn local_name(raw: &[u8]) -> String {
-    let s = String::from_utf8_lossy(raw);
-    match s.rsplit(':').next() {
-        Some(n) => n.to_string(),
-        None => s.to_string(),
-    }
-}
-
 fn attrs_map(e: &BytesStart<'_>) -> std::collections::HashMap<String, String> {
     let mut m = std::collections::HashMap::new();
     for a in e.attributes().flatten() {
-        let k = local_name(a.key.as_ref());
+        let k = a.key.local_name().as_ref().to_string();
         let v = a
-            .unescape_value()
+            .normalized_value(XmlVersion::Explicit1_0)
             .map(|v| v.into_owned())
             .unwrap_or_default();
         m.insert(k, v);

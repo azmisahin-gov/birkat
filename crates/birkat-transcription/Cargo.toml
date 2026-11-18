@@ -46,5 +46,11 @@ optional = true
 workspace = true
 optional = true
 
+[[example]]
+name = "whisper-dogrula"
+required-features = ["whisper"]
+
 [dev-dependencies]
 tempfile = { workspace = true }
+hound = { workspace = true }
+serde_json = { workspace = true }

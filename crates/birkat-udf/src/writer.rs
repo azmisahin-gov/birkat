@@ -490,7 +490,7 @@ pub fn pack_udf(content_xml: &str) -> Result<Vec<u8>, WriteError> {
     let mut cursor = std::io::Cursor::new(Vec::new());
     {
         let mut zip = zip::ZipWriter::new(&mut cursor);
-        let options: zip::write::FileOptions<'_, ()> = zip::write::FileOptions::default()
+        let options: zip::write::SimpleFileOptions = zip::write::FileOptions::default()
             .compression_method(zip::CompressionMethod::Deflated)
             .unix_permissions(0o644);
         zip.start_file(crate::CONTENT_XML, options)?;

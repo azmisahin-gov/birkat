@@ -36,7 +36,10 @@ impl CaseWorkspace {
         let mut vault = CaseVault::open(&root)?;
         vault.set_case(case.id.clone())?;
 
-        let mut audit = birkat_audit::AuditChain::new();
+        // İşlem geçmişi **vakalar arası ortak** bir hash zinciridir.
+        // Zincir her vakada sıfırdan başlatılırsa sıra numaraları çakışır;
+        // bu nedenle önce depodaki zincir yüklenir ve üzerine eklenir.
+        let mut audit = store.load_audit_chain().unwrap_or_default();
         audit.append(
             birkat_audit::AuditAction::CaseCreated,
             "bilirkişi",

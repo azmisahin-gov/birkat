@@ -24,7 +24,7 @@ use birkat_app::workspace::{new_case_from_assignment, CaseWorkspace};
 use birkat_core::case::CourtOrAuthority;
 use birkat_core::ids::CourtId;
 use birkat_core::profile::ExpertProfile;
-use birkat_transcription::engine::MockEngine;
+
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -319,13 +319,15 @@ fn main() -> Result<()> {
         Komut::Transkript { vaka, yol } => {
             let case_id = vaka.parse::<birkat_core::ids::CaseId>()?;
             let mut ws = CaseWorkspace::open(&cli.veri, &case_id, &mut store)?;
-            let engine = MockEngine::default();
+            let secim = birkat_transcription::select_engine(&cli.veri, false);
+            println!("{}", secim.notice);
+            println!("Kullanılan motor: {}", secim.kind.label());
             println!("Otomatik iş akışı başlatılıyor...");
             let out = birkat_app::run_automatic_workflow(
                 &mut ws,
                 &mut store,
                 &[yol],
-                &engine,
+                secim.engine.as_ref(),
                 &cli.veri,
             )?;
             println!("{}", out.summary());
@@ -658,7 +660,18 @@ fn main() -> Result<()> {
             );
             println!("Veri modeli sürümü: {}", birkat_core::MODEL_VERSION);
             println!("Veri kök dizini: {}", cli.veri.display());
-            println!("Not: {}", birkat_audio::waveform::interpretation_note());
+            println!(
+                "Whisper desteği: {}",
+                if birkat_transcription::runtime::whisper_compiled() {
+                    "derlemede etkin"
+                } else {
+                    "derlemede KAPALI (gerçek transkripsiyon yapılamaz)"
+                }
+            );
+            match birkat_transcription::discover_model_dir(&cli.veri) {
+                Some(p) => println!("Model paketi: {} (hazır)", p.root.display()),
+                None => println!("Model paketi: BULUNAMADI"),
+            }
         }
     }
 

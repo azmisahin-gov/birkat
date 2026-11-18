@@ -255,7 +255,10 @@ impl Updater {
             let mut entry = archive
                 .by_index(i)
                 .map_err(|e| CoreError::Data(format!("Paket girdisi okunamadı: {e}")))?;
-            let name = entry.name().to_string();
+            let name = entry
+                .name()
+                .map_err(|e| CoreError::Data(format!("Paket girdi adı okunamadı: {e}")))?
+                .to_string();
             if name.contains("..") || name.starts_with('/') {
                 return Err(CoreError::Validation(format!(
                     "Güncelleme paketinde güvensiz yol: {name}"
@@ -505,7 +508,7 @@ mod tests {
         {
             let f = std::fs::File::create(&pkg).unwrap();
             let mut zip = zip::ZipWriter::new(f);
-            let opts: zip::write::FileOptions<'_, ()> = zip::write::FileOptions::default();
+            let opts: zip::write::SimpleFileOptions = zip::write::FileOptions::default();
             zip.start_file("bin/birkat.exe", opts).unwrap();
             zip.write_all(b"yeni surum ikili dosyasi").unwrap();
             zip.start_file("README.txt", opts).unwrap();
@@ -670,7 +673,7 @@ mod tests {
         {
             let f = std::fs::File::create(&pkg).unwrap();
             let mut zip = zip::ZipWriter::new(f);
-            let opts: zip::write::FileOptions<'_, ()> = zip::write::FileOptions::default();
+            let opts: zip::write::SimpleFileOptions = zip::write::FileOptions::default();
             zip.start_file("../kacis.txt", opts).unwrap();
             zip.write_all(b"kotu").unwrap();
             zip.finish().unwrap();

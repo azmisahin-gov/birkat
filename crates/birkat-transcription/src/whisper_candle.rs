@@ -170,24 +170,52 @@ impl WhisperCandleEngine {
         tokens.push(no_ts);
 
         let mut out_ids: Vec<u32> = Vec::new();
+        // İlk adımda istem belirteçlerinin tamamı beslenir ve KV önbelleği
+        // kurulur. Sonraki adımlarda yalnızca son belirteç beslenir; önbellek
+        // sayesinde önceki belirteçler yeniden hesaplanmaz. Bu, çıkarımı
+        // belirgin biçimde hızlandırır.
+        let mut ilk_adim = true;
         for _ in 0..224 {
-            let input = Tensor::new(tokens.as_slice(), &self.device)
-                .map_err(|e| CoreError::Data(format!("Belirteç tensörü hatası: {e}")))?
-                .unsqueeze(0)
+            let input = if ilk_adim {
+                Tensor::new(tokens.as_slice(), &self.device)
+                    .map_err(|e| CoreError::Data(format!("Belirteç tensörü hatası: {e}")))?
+                    .unsqueeze(0)
+                    .map_err(|e| CoreError::Data(format!("Tensör hatası: {e}")))?
+            } else {
+                let son = *tokens
+                    .last()
+                    .ok_or_else(|| CoreError::Data("Belirteç listesi boş.".to_string()))?;
+                Tensor::new(&[son], &self.device)
+                    .map_err(|e| CoreError::Data(format!("Belirteç tensörü hatası: {e}")))?
+                    .unsqueeze(0)
+                    .map_err(|e| CoreError::Data(format!("Tensör hatası: {e}")))?
+            };
+            // Kodçözücü çıktısı **gizli durumdur**; sözcük dağarcığı
+            // logitleri için `final_linear` uygulanmalıdır. Doğrudan
+            // argmax almak tek harflik çıktı üretir.
+            let gizli = model
+                .decoder
+                .forward(&input, &audio_features, ilk_adim)
+                .map_err(|e| CoreError::Data(format!("Kodçözücü hatası: {e}")))?;
+            ilk_adim = false;
+            let seq = gizli
+                .dim(1)
                 .map_err(|e| CoreError::Data(format!("Tensör hatası: {e}")))?;
             let logits = model
                 .decoder
-                .forward(&input, &audio_features, false)
-                .map_err(|e| CoreError::Data(format!("Kodçözücü hatası: {e}")))?;
-            let seq = logits
-                .dim(1)
-                .map_err(|e| CoreError::Data(format!("Tensör hatası: {e}")))?;
-            let last = logits
-                .i((.., seq - 1, ..))
+                .final_linear(
+                    &gizli
+                        .i((.., seq - 1.., ..))
+                        .map_err(|e| CoreError::Data(format!("Tensör hatası: {e}")))?,
+                )
+                .map_err(|e| CoreError::Data(format!("Son doğrusal katman hatası: {e}")))?
+                .i(0)
+                .map_err(|e| CoreError::Data(format!("Tensör hatası: {e}")))?
+                .i(0)
                 .map_err(|e| CoreError::Data(format!("Tensör hatası: {e}")))?
                 .to_dtype(DType::F32)
                 .map_err(|e| CoreError::Data(format!("Tensör hatası: {e}")))?;
-            let next = last
+            let next = logits
                 .argmax(D::Minus1)
                 .map_err(|e| CoreError::Data(format!("Argmax hatası: {e}")))?
                 .to_scalar::<u32>()
@@ -205,15 +233,29 @@ impl WhisperCandleEngine {
     }
 
     /// Mel spektrogram hesaplar.
+    /// 30 saniyelik sabit pencere için log-mel spektrogram hesaplar.
+    ///
+    /// Whisper kodlayıcısı **sabit** `N_FRAMES` (3000) mel karesi bekler.
+    /// Kısa kayıtlar sıfırla doldurulur; candle'ın mel fonksiyonunun eklediği
+    /// fazla dolgu kareleri kırpılır. Bu adım atlanırsa kodlayıcı hatalı
+    /// boyutla çalışır ve model anlamsız çıktı üretir.
     fn mel(&self, samples: &[f32]) -> Result<Tensor> {
-        let mel = audio::pcm_to_mel(&self.config, samples, &self.mel_filters);
-        let n = mel.len() / self.config.num_mel_bins;
-        let t = Tensor::from_vec(mel, (n, self.config.num_mel_bins), &Device::Cpu)
+        let mut pencere = vec![0.0f32; m::N_SAMPLES];
+        let n = samples.len().min(m::N_SAMPLES);
+        pencere[..n].copy_from_slice(&samples[..n]);
+
+        let mel = audio::pcm_to_mel(&self.config, &pencere, &self.mel_filters);
+        let kare = mel.len() / self.config.num_mel_bins;
+        if kare < m::N_FRAMES {
+            return Err(CoreError::Data(format!(
+                "Mel kare sayısı yetersiz: {kare} < {}",
+                m::N_FRAMES
+            )));
+        }
+        let t = Tensor::from_vec(mel, (1, self.config.num_mel_bins, kare), &Device::Cpu)
             .map_err(|e| CoreError::Data(format!("Mel tensörü hatası: {e}")))?
-            .transpose(0, 1)
-            .map_err(|e| CoreError::Data(format!("Mel tensörü hatası: {e}")))?
-            .unsqueeze(0)
-            .map_err(|e| CoreError::Data(format!("Mel tensörü hatası: {e}")))?;
+            .narrow(2, 0, m::N_FRAMES)
+            .map_err(|e| CoreError::Data(format!("Mel kırpma hatası: {e}")))?;
         t.to_device(&self.device)
             .map_err(|e| CoreError::Data(format!("Mel tensörü cihaza taşınamadı: {e}")))
     }

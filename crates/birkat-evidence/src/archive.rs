@@ -128,7 +128,10 @@ pub fn extract_zip_reader_safely<R: Read + std::io::Seek>(
         let f = archive
             .by_index(i)
             .map_err(|e| CoreError::Data(format!("Arşiv girdisi okunamadı: {e}")))?;
-        let name = f.name().to_string();
+        let name = f
+            .name()
+            .map_err(|e| CoreError::Data(format!("Arşiv girdi adı okunamadı: {e}")))?
+            .to_string();
 
         if !is_safe_entry_name(&name) {
             return Err(CoreError::Validation(format!(
@@ -248,7 +251,7 @@ mod tests {
         let p = dir.join("arsiv.zip");
         let f = std::fs::File::create(&p).unwrap();
         let mut z = zip::ZipWriter::new(f);
-        let opts: zip::write::FileOptions<'_, ()> =
+        let opts: zip::write::SimpleFileOptions =
             zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
         for (name, data) in entries {
             z.start_file(*name, opts).unwrap();

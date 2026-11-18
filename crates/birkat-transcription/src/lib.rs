@@ -29,6 +29,7 @@ pub mod hallucination;
 pub mod model_package;
 pub mod quality;
 pub mod queue;
+pub mod runtime;
 
 #[cfg(feature = "whisper")]
 pub mod whisper_candle;
@@ -40,3 +41,4 @@ pub use engine::{
 pub use model_package::{ModelPackage, ModelVerification};
 pub use quality::{run_quality_control, QualityControlInput};
 pub use queue::{JobQueue, QueueSnapshot};
+pub use runtime::{discover_model_dir, select_engine, EngineKind, EngineSelection, ModelPaths};
