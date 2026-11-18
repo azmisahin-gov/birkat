@@ -96,6 +96,8 @@ pub struct InventoryResult {
     pub duplicates: usize,
     /// Hatalı/okunamayan dosya.
     pub unreadable: usize,
+    /// Envanter sırasında oluşan uyarılar (erişilemeyen yollar vb.).
+    pub warnings: Vec<String>,
 }
 
 impl InventoryResult {
@@ -123,7 +125,13 @@ pub fn build_inventory(paths: &[PathBuf], compute_hash: bool) -> Result<Inventor
     let mut scanned = 0usize;
     let mut hash_index: HashMap<String, PathBuf> = HashMap::new();
 
+    let mut warnings: Vec<String> = Vec::new();
+
     for root in paths {
+        if !root.exists() {
+            warnings.push(format!("Materyal yolu bulunamadı: {}", root.display()));
+            continue;
+        }
         let walker: Box<dyn Iterator<Item = walkdir::Result<walkdir::DirEntry>>> =
             if root.is_dir() {
                 Box::new(WalkDir::new(root).follow_links(false).into_iter())
@@ -135,15 +143,7 @@ pub fn build_inventory(paths: &[PathBuf], compute_hash: bool) -> Result<Inventor
             let entry = match entry {
                 Ok(e) => e,
                 Err(e) => {
-                    entries.push(AudioInventoryEntry {
-                        path: e.path().map(|p| p.to_path_buf()).unwrap_or_default(),
-                        detected: DetectedKind::Unknown,
-                        probe: None,
-                        sha256: None,
-                        readability: Readability::Corrupt(format!("dizin okunamadı: {e}")),
-                        duplicate_of: None,
-                        warnings: Vec::new(),
-                    });
+                    warnings.push(format!("Dizin okunamadı: {e}"));
                     continue;
                 }
             };
@@ -247,6 +247,7 @@ pub fn build_inventory(paths: &[PathBuf], compute_hash: bool) -> Result<Inventor
         transcribable,
         duplicates,
         unreadable,
+        warnings,
     })
 }
 

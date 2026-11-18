@@ -184,6 +184,38 @@ pub fn transition(from: WorkflowState, to: WorkflowState) -> Result<WorkflowStat
     }
 }
 
+/// `from` durumundan `to` durumuna giden adım yolunu bulur.
+///
+/// Yol, `allowed_transitions` grafiğinde genişlik öncelikli arama ile
+/// bulunur. Ara durumlar da döndürülür; böylece otomatik iş akışı her
+/// adımı kaydederek ilerleyebilir.
+pub fn path_to(from: WorkflowState, to: WorkflowState) -> Option<Vec<WorkflowState>> {
+    if from == to {
+        return Some(Vec::new());
+    }
+    let mut queue: std::collections::VecDeque<(WorkflowState, Vec<WorkflowState>)> =
+        std::collections::VecDeque::new();
+    let mut visited: std::collections::HashSet<WorkflowState> = std::collections::HashSet::new();
+    queue.push_back((from, Vec::new()));
+    visited.insert(from);
+
+    while let Some((current, path)) = queue.pop_front() {
+        for next in current.allowed_transitions() {
+            if visited.contains(&next) {
+                continue;
+            }
+            let mut new_path = path.clone();
+            new_path.push(next);
+            if next == to {
+                return Some(new_path);
+            }
+            visited.insert(next);
+            queue.push_back((next, new_path));
+        }
+    }
+    None
+}
+
 /// Vaka iş akışı kaydı.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorkflowRecord {
@@ -321,6 +353,25 @@ mod tests {
         let mut wf = WorkflowRecord::new();
         wf.cancel();
         assert!(wf.advance().is_err());
+    }
+
+    #[test]
+    fn path_to_finds_route_between_states() {
+        let p = path_to(New, Inventory).unwrap();
+        assert_eq!(
+            p,
+            vec![AssignmentImported, AssignmentReview, MaterialsPending, MaterialsReceived, Acquisition, Inventory]
+        );
+    }
+
+    #[test]
+    fn path_to_same_state_is_empty() {
+        assert_eq!(path_to(New, New), Some(vec![]));
+    }
+
+    #[test]
+    fn path_to_unreachable_is_none() {
+        assert_eq!(path_to(Archived, New), None);
     }
 
     #[test]
