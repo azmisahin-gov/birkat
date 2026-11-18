@@ -706,6 +706,7 @@ dependencies = [
 name = "birkat-updater"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "birkat-core",
  "birkat-crypto",
  "hex",
@@ -716,6 +717,7 @@ dependencies = [
  "thiserror 2.0.21",
  "time",
  "toml",
+ "walkdir",
  "zip 2.6.1",
 ]
 
