@@ -15,6 +15,7 @@ thiserror = { workspace = true }
 time = { workspace = true }
 zip = { workspace = true }
 quick-xml = { workspace = true }
+printpdf = { version = "0.12", default-features = false, features = ["images"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }

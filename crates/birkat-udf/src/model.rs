@@ -267,6 +267,12 @@ impl TextStyle {
             ..Default::default()
         }
     }
+
+    /// Punto değiştirilmiş kopya.
+    pub fn with_size(mut self, size: f64) -> Self {
+        self.size = size;
+        self
+    }
 }
 
 /// Gövde bloğu.
