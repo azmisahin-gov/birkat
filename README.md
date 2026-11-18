@@ -8,6 +8,65 @@ Windows masaüstü uygulamasıdır. Görevlendirmenin alınmasından raporun UYA
 biçiminde hazırlanıp teslim sürecinin tamamlanmasına ve dosyanın arşivlenmesine
 kadar olan dijital çalışma yükünü üstlenir.
 
+---
+
+## ⬇️ İNDİR VE KUR
+
+**Windows 11 x64 — çevrimdışı kurulum paketi (internet gerekmez, model dahil)**
+
+### [⬇ BİRKÂT-0.1.0-windows-x64-offline-setup.exe](https://github.com/azmisahin-gov/birkat/releases/download/v0.1.0/BIRKAT-0.1.0-windows-x64-offline-setup.exe)
+
+| | |
+|---|---|
+| Sürüm | 0.1.0 |
+| Boyut | 1,505,558,800 bayt (1,4 GB) |
+| SHA-256 | `8cdbf9de1a5bc0a3ceaa13258628826b988a2e35716ef1b8f80366adcb5eaeee` |
+| Hedef | Windows 11 x64 |
+| İçerik | BİRKÂT + Whisper large-v3-turbo modeli + Türkçe belgeler |
+| İnternet | **Gerekmez** |
+
+**Kurulum (3 adım)**
+
+1. Yukarıdaki bağlantıdan `.exe` dosyasını indirin.
+2. Dosyayı çift tıklayıp çalıştırın. Türkçe kurulum sihirbazı sizi yönlendirir
+   (yönetici yetkisi istenir).
+3. Kurulum sonunda Başlat menüsünde ve masaüstünde **BİRKÂT** kısayolu oluşur.
+
+**İlk açılış**
+
+1. BİRKÂT'ı açın (internet bağlantısı gerekmez).
+2. Bilirkişi profilinizi oluşturun: ad soyad, unvan, sicil numarası.
+3. Veri kök dizinini ve yedek dizinini seçin.
+4. Kasa parolasını belirleyin (en az 12 karakter). **Parolayı ve kurtarma
+   anahtarını güvenli bir yere yazın.**
+5. Yeni görevlendirme açıp belgeleri ve ses dosyalarını verin; uygulama
+   envanteri, transkripsiyonu, kalite kontrolünü ve UDF raporunu hazırlar.
+
+**Bütünlük doğrulaması (isteğe bağlı)**
+
+```bash
+sha256sum -c SHA256SUMS.txt
+```
+
+### Diğer indirmeler
+
+| Dosya | Açıklama |
+|---|---|
+| [BIRKAT-0.1.0-windows-x64-offline.zip](https://github.com/azmisahin-gov/birkat/releases/download/v0.1.0/BIRKAT-0.1.0-windows-x64-offline.zip) | Kurulum gerektirmeyen taşınabilir paket (1,4 GB) |
+| [SHA256SUMS.txt](https://github.com/azmisahin-gov/birkat/releases/download/v0.1.0/SHA256SUMS.txt) | Dosya hash'leri |
+| [BIRKAT-0.1.0-sbom.cdx.json](https://github.com/azmisahin-gov/birkat/releases/download/v0.1.0/BIRKAT-0.1.0-sbom.cdx.json) | Yazılım malzeme listesi (CycloneDX) |
+| [BIRKAT-0.1.0-LICENSES.md](https://github.com/azmisahin-gov/birkat/releases/download/v0.1.0/BIRKAT-0.1.0-LICENSES.md) | Bağımlılık lisansları |
+| [Tüm yayınlar](https://github.com/azmisahin-gov/birkat/releases) | Sürüm geçmişi |
+
+**Kaldırma:** Ayarlar → Uygulamalar → BİRKÂT → Kaldır.
+Kaldırma vaka verinizi silmez.
+
+**Bu sürümde henüz yapılmamış işler:** Resmî UYAP Editör ile UDF uyumluluk
+testi ve gerçek USB/SD aygıt testleri kullanıcı ortamında yapılmalıdır.
+Ayrıntı: [`docs/kabul-testi-matrisi.md`](docs/kabul-testi-matrisi.md)
+
+---
+
 > **Ürünün temel vaadi:** Bilirkişi teknik işlerle değil, bilirkişilik işiyle
 > uğraşır.
 
