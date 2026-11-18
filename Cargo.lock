@@ -476,13 +476,16 @@ name = "birkat-audio"
 version = "0.1.0"
 dependencies = [
  "birkat-core",
+ "hex",
  "hound",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "symphonia",
  "tempfile",
  "thiserror 2.0.21",
  "time",
+ "walkdir",
 ]
 
 [[package]]
