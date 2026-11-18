@@ -69,7 +69,11 @@ impl AudioInventoryEntry {
                 .file_name()
                 .map(|n| n.to_string_lossy().to_string())
                 .unwrap_or_default(),
-            stream_index: self.probe.as_ref().and_then(|p| p.stream_index).unwrap_or(0),
+            stream_index: self
+                .probe
+                .as_ref()
+                .and_then(|p| p.stream_index)
+                .unwrap_or(0),
             metadata,
             language: None,
             transcript: None,
@@ -132,12 +136,12 @@ pub fn build_inventory(paths: &[PathBuf], compute_hash: bool) -> Result<Inventor
             warnings.push(format!("Materyal yolu bulunamadı: {}", root.display()));
             continue;
         }
-        let walker: Box<dyn Iterator<Item = walkdir::Result<walkdir::DirEntry>>> =
-            if root.is_dir() {
-                Box::new(WalkDir::new(root).follow_links(false).into_iter())
-            } else {
-                Box::new(WalkDir::new(root).into_iter())
-            };
+        let walker: Box<dyn Iterator<Item = walkdir::Result<walkdir::DirEntry>>> = if root.is_dir()
+        {
+            Box::new(WalkDir::new(root).follow_links(false).into_iter())
+        } else {
+            Box::new(WalkDir::new(root).into_iter())
+        };
 
         for entry in walker {
             let entry = match entry {
@@ -171,7 +175,10 @@ pub fn build_inventory(paths: &[PathBuf], compute_hash: bool) -> Result<Inventor
 
             // Ses içerebilecek dosyaları incele.
             let is_audio = detected.may_contain_audio()
-                || matches!(detected, DetectedKind::Audio(_) | DetectedKind::Container(_));
+                || matches!(
+                    detected,
+                    DetectedKind::Audio(_) | DetectedKind::Container(_)
+                );
             if !is_audio {
                 continue;
             }
@@ -198,10 +205,7 @@ pub fn build_inventory(paths: &[PathBuf], compute_hash: bool) -> Result<Inventor
                     };
                     (Some(p), r)
                 }
-                Err(e) => (
-                    None,
-                    Readability::UndecodableCodec(format!("{e}")),
-                ),
+                Err(e) => (None, Readability::UndecodableCodec(format!("{e}"))),
             };
 
             let mut duplicate_of = None;
@@ -310,8 +314,7 @@ pub fn detect_signature(data: &[u8], extension: Option<&str>) -> DetectedKind {
         return DetectedKind::Audio("AMR".to_string());
     }
     if data.len() >= 16
-        && data[..16]
-            == *b"\x30\x26\xB2\x75\x8E\x66\xCF\x11\xA6\xD9\x00\xAA\x00\x62\xCE\x6C"
+        && data[..16] == *b"\x30\x26\xB2\x75\x8E\x66\xCF\x11\xA6\xD9\x00\xAA\x00\x62\xCE\x6C"
     {
         return DetectedKind::Audio("WMA/ASF".to_string());
     }
@@ -411,7 +414,10 @@ mod tests {
         assert_eq!(r.unreadable, 1);
         let (entry, reason) = &r.unreadable_entries()[0];
         assert!(!reason.is_empty());
-        assert!(matches!(entry.readability, Readability::UndecodableCodec(_)));
+        assert!(matches!(
+            entry.readability,
+            Readability::UndecodableCodec(_)
+        ));
     }
 
     #[test]

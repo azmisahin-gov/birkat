@@ -567,11 +567,10 @@ pub fn build_report(
 
     // Yanıtlar (orijinal sırayla)
     for q in &ordered {
-        let mut p = Paragraph_text(format!("{}. {}", q.ordinal, q.original_text));
         report.push_block(
             SectionId::Answers,
             Block::Paragraph {
-                text: p.clone(),
+                text: format!("{}. {}", q.ordinal, q.original_text),
                 align: Align::Justify,
             },
         );
@@ -586,7 +585,6 @@ pub fn build_report(
                 align: Align::Justify,
             },
         );
-        p.clear();
     }
 
     // Dayanaklar
@@ -738,12 +736,6 @@ pub fn build_report(
     report
 }
 
-/// Yardımcı: paragraf metni (kullanılmıyor; tip uyumu için).
-#[allow(dead_code)]
-fn Paragraph_text(s: String) -> String {
-    s
-}
-
 /// Varsayılan yöntem açıklaması.
 pub fn default_method_text() -> String {
     "İnceleme, ses kayıtlarının yerel (çevrimdışı) bir konuşma tanıma modeliyle \
@@ -779,8 +771,7 @@ pub fn default_limitations() -> Vec<String> {
 
 /// Gerekçeli sonuç yer tutucusu.
 pub fn conclusion_placeholder() -> String {
-    "(Gerekçeli sonuç ve mesleki kanaat bilirkişi tarafından yazılacaktır.)"
-        .to_string()
+    "(Gerekçeli sonuç ve mesleki kanaat bilirkişi tarafından yazılacaktır.)".to_string()
 }
 
 #[cfg(test)]
@@ -803,20 +794,22 @@ mod tests {
         c.assignment.file_number = Some("2025/123 Esas".into());
         c.assignment.subject = Some("Ses kaydının metne dönüştürülmesi".into());
         c.assignment.declared_materials = vec!["1 adet USB bellek".into()];
-        c.assignment.questions.push(birkat_core::case::AssignmentQuestion {
-            id: birkat_core::ids::QuestionId::new(),
-            ordinal: 1,
-            original_text: "Kayıttaki konuşmalar çözülsün.".into(),
-            related_evidence: vec![],
-            related_segments: vec![],
-            related_findings: vec![],
-            requirement: None,
-            expert_note: None,
-            draft_answer: None,
-            final_answer: Some("Çözümleme yapıldı.".into()),
-            answer_status: ContentStatus::ExpertApproved,
-            out_of_scope: false,
-        });
+        c.assignment
+            .questions
+            .push(birkat_core::case::AssignmentQuestion {
+                id: birkat_core::ids::QuestionId::new(),
+                ordinal: 1,
+                original_text: "Kayıttaki konuşmalar çözülsün.".into(),
+                related_evidence: vec![],
+                related_segments: vec![],
+                related_findings: vec![],
+                requirement: None,
+                expert_note: None,
+                draft_answer: None,
+                final_answer: Some("Çözümleme yapıldı.".into()),
+                answer_status: ContentStatus::ExpertApproved,
+                out_of_scope: false,
+            });
         c
     }
 
@@ -875,20 +868,22 @@ mod tests {
     #[test]
     fn questions_appear_in_original_order() {
         let mut c = case_with_question();
-        c.assignment.questions.push(birkat_core::case::AssignmentQuestion {
-            id: birkat_core::ids::QuestionId::new(),
-            ordinal: 2,
-            original_text: "İkinci soru.".into(),
-            related_evidence: vec![],
-            related_segments: vec![],
-            related_findings: vec![],
-            requirement: None,
-            expert_note: None,
-            draft_answer: None,
-            final_answer: None,
-            answer_status: ContentStatus::MachineOutput,
-            out_of_scope: false,
-        });
+        c.assignment
+            .questions
+            .push(birkat_core::case::AssignmentQuestion {
+                id: birkat_core::ids::QuestionId::new(),
+                ordinal: 2,
+                original_text: "İkinci soru.".into(),
+                related_evidence: vec![],
+                related_segments: vec![],
+                related_findings: vec![],
+                requirement: None,
+                expert_note: None,
+                draft_answer: None,
+                final_answer: None,
+                answer_status: ContentStatus::MachineOutput,
+                out_of_scope: false,
+            });
         let r = build_report(&c, &[expert()], &input(), ReportKind::Main, 1);
         let questions = r.section(SectionId::Questions).unwrap();
         match &questions.blocks[0] {
@@ -959,7 +954,9 @@ mod tests {
     fn defaults_mention_scope_limitation() {
         let l = default_limitations();
         assert!(l.iter().any(|s| s.contains("56.12")));
-        assert!(l.iter().any(|s| s.contains("biyometrik tanımlama değildir")));
+        assert!(l
+            .iter()
+            .any(|s| s.contains("biyometrik tanımlama değildir")));
     }
 
     fn section_text(r: &ReportDocument, id: SectionId) -> String {

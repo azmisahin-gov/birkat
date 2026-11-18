@@ -16,7 +16,6 @@ sha1 = { workspace = true }
 md-5 = { workspace = true }
 hex = { workspace = true }
 walkdir = { workspace = true }
-filetime = { workspace = true }
 time = { workspace = true }
 zip = { workspace = true }
 ewf-image = { version = "0.6", default-features = false, features = ["verify"] }

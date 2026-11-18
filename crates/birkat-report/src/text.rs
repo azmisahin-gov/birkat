@@ -88,9 +88,13 @@ pub fn to_text(report: &ReportDocument) -> String {
                         out.push('\n');
                     }
                 }
-                Block::Image { caption, .. } => {
-                    out.push_str(&format!("[Görsel{}]\n", caption.as_deref().map(|c| format!(": {c}")).unwrap_or_default()))
-                }
+                Block::Image { caption, .. } => out.push_str(&format!(
+                    "[Görsel{}]\n",
+                    caption
+                        .as_deref()
+                        .map(|c| format!(": {c}"))
+                        .unwrap_or_default()
+                )),
                 Block::PageBreak => out.push_str("\n--- sayfa sonu ---\n"),
                 Block::TimeReference {
                     label,
@@ -388,7 +392,9 @@ mod tests {
     #[test]
     fn export_dispatches_by_format() {
         let r = report();
-        assert!(export(&r, AuxiliaryFormat::Json).trim_start().starts_with('{'));
+        assert!(export(&r, AuxiliaryFormat::Json)
+            .trim_start()
+            .starts_with('{'));
         assert!(export(&r, AuxiliaryFormat::Csv).contains(';'));
         assert!(export(&r, AuxiliaryFormat::Vtt).starts_with("WEBVTT"));
     }

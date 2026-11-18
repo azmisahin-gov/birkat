@@ -3,8 +3,8 @@
 //! SHA-256 zorunludur. MD5 ve SHA-1 eski imaj formatlarıyla uyumluluk ve
 //! karşılaştırma amacıyla tutulur; **güvenlik için SHA-256 esas alınır**.
 
-use birkat_core::evidence::HashAlgorithm;
 use birkat_core::error::{CoreError, Result};
+use birkat_core::evidence::HashAlgorithm;
 use sha2::Digest;
 use std::io::Read;
 use std::path::Path;
@@ -145,10 +145,7 @@ pub fn hash_file_all(path: impl AsRef<Path>) -> Result<Vec<HashDigest>> {
 /// İki dosyanın SHA-256 değerlerini karşılaştırır.
 ///
 /// Kaynak ve hedef kopya karşılaştırması için kullanılır (5.4).
-pub fn verify_identical(
-    source: impl AsRef<Path>,
-    target: impl AsRef<Path>,
-) -> Result<bool> {
+pub fn verify_identical(source: impl AsRef<Path>, target: impl AsRef<Path>) -> Result<bool> {
     let a = hash_file(&source, HashAlgorithm::Sha256)?;
     let b = hash_file(&target, HashAlgorithm::Sha256)?;
     Ok(a.value.eq_ignore_ascii_case(&b.value))
@@ -180,17 +177,12 @@ pub fn mismatch_error(expected: &str, actual: &str) -> CoreError {
 mod tests {
     use super::*;
 
-    const EMPTY_SHA256: &str =
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
-    const HELLO_SHA256: &str =
-        "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
+    const EMPTY_SHA256: &str = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
+    const HELLO_SHA256: &str = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824";
 
     #[test]
     fn sha256_of_empty_is_known_value() {
-        assert_eq!(
-            hash_bytes(b"", HashAlgorithm::Sha256).value,
-            EMPTY_SHA256
-        );
+        assert_eq!(hash_bytes(b"", HashAlgorithm::Sha256).value, EMPTY_SHA256);
     }
 
     #[test]
@@ -239,7 +231,10 @@ mod tests {
         let p = dir.path().join("v.bin");
         std::fs::write(&p, b"abc").unwrap();
         let all = hash_file_all(&p).unwrap();
-        assert_eq!(all[0].value, hash_bytes(b"abc", HashAlgorithm::Sha256).value);
+        assert_eq!(
+            all[0].value,
+            hash_bytes(b"abc", HashAlgorithm::Sha256).value
+        );
         assert_eq!(all[1].value, hash_bytes(b"abc", HashAlgorithm::Sha1).value);
         assert_eq!(all[2].value, hash_bytes(b"abc", HashAlgorithm::Md5).value);
     }

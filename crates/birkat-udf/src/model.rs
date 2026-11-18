@@ -553,7 +553,12 @@ impl Default for Cell {
 /// İşaretli ARGB rengi `#RRGGBB` onaltılık metne çevirir.
 pub fn argb_to_hex(value: i32) -> String {
     let v = value as u32;
-    format!("#{:02X}{:02X}{:02X}", (v >> 16) & 0xFF, (v >> 8) & 0xFF, v & 0xFF)
+    format!(
+        "#{:02X}{:02X}{:02X}",
+        (v >> 16) & 0xFF,
+        (v >> 8) & 0xFF,
+        v & 0xFF
+    )
 }
 
 /// `#RRGGBB` onaltılık metni işaretli ARGB tam sayısına çevirir.

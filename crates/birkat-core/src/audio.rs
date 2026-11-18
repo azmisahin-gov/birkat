@@ -557,7 +557,7 @@ impl QualityReport {
             .iter()
             .filter(|f| f.severity >= QualitySeverity::Medium)
             .collect();
-        v.sort_by(|a, b| b.severity.cmp(&a.severity));
+        v.sort_by_key(|f| std::cmp::Reverse(f.severity));
         v
     }
 

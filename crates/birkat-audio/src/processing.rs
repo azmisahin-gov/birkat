@@ -89,8 +89,7 @@ impl DerivedAudio {
         DerivedAudio {
             pcm,
             steps: steps.to_vec(),
-            source_note: "Orijinal ses değiştirilmedi; bu çıktı türetilmiştir."
-                .to_string(),
+            source_note: "Orijinal ses değiştirilmedi; bu çıktı türetilmiştir.".to_string(),
         }
     }
 }
@@ -216,7 +215,10 @@ mod tests {
     fn peak_normalize_scales_to_target() {
         let p = pcm(vec![vec![0.25, -0.5, 0.1]], 1000);
         let out = peak_normalize(p, 1.0);
-        let peak = out.samples[0].iter().map(|s| s.abs()).fold(0.0f32, f32::max);
+        let peak = out.samples[0]
+            .iter()
+            .map(|s| s.abs())
+            .fold(0.0f32, f32::max);
         assert!((peak - 1.0).abs() < 1e-6);
     }
 
@@ -231,7 +233,9 @@ mod tests {
     fn low_pass_reduces_high_frequency_energy() {
         // Nyquist'e yakın alternatif +1/-1 sinyal alçak geçirenle sönmeli.
         let sr = 8000u32;
-        let ch: Vec<f32> = (0..200).map(|i| if i % 2 == 0 { 1.0 } else { -1.0 }).collect();
+        let ch: Vec<f32> = (0..200)
+            .map(|i| if i % 2 == 0 { 1.0 } else { -1.0 })
+            .collect();
         let p = pcm(vec![ch], sr);
         let out = low_pass(p, 200.0, sr);
         let last = out.samples[0][199].abs();
@@ -256,10 +260,7 @@ mod tests {
     #[test]
     fn derived_label_marks_not_original() {
         let p = pcm(vec![vec![0.1; 10]], 1000);
-        let d = DerivedAudio::apply(
-            p,
-            &[ProcessingStep::PeakNormalize { target_peak: 0.9 }],
-        );
+        let d = DerivedAudio::apply(p, &[ProcessingStep::PeakNormalize { target_peak: 0.9 }]);
         let l = d.label();
         assert!(l.contains("orijinal kayıt değildir"));
         assert!(l.contains("Tepe normalizasyonu"));

@@ -249,10 +249,7 @@ impl AuditChain {
                     valid: false,
                     checked: i,
                     first_bad_sequence: Some(event.sequence),
-                    message: format!(
-                        "{} numaralı kaydın önceki hash bağı kopuk.",
-                        event.sequence
-                    ),
+                    message: format!("{} numaralı kaydın önceki hash bağı kopuk.", event.sequence),
                     is_independent_timestamp: false,
                 };
             }

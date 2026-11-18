@@ -224,10 +224,7 @@ impl DetectedKind {
 
     /// Bu tür ses içerebilir mi?
     pub fn may_contain_audio(&self) -> bool {
-        matches!(
-            self,
-            DetectedKind::Audio(_) | DetectedKind::Container(_)
-        )
+        matches!(self, DetectedKind::Audio(_) | DetectedKind::Container(_))
     }
 }
 

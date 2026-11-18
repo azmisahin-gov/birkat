@@ -34,8 +34,8 @@ pub mod queue;
 pub mod whisper_candle;
 
 pub use engine::{
-    EngineCapabilities, TranscriptionEngine, TranscriptionOutput, TranscriptionRequest,
-    TranscriptSegmentDraft,
+    EngineCapabilities, TranscriptSegmentDraft, TranscriptionEngine, TranscriptionOutput,
+    TranscriptionRequest,
 };
 pub use model_package::{ModelPackage, ModelVerification};
 pub use quality::{run_quality_control, QualityControlInput};

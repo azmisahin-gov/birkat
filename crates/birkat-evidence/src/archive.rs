@@ -225,9 +225,7 @@ pub fn extract_archive_safely(
         birkat_core::evidence::DetectedKind::Zip
         | birkat_core::evidence::DetectedKind::Docx
         | birkat_core::evidence::DetectedKind::Odt
-        | birkat_core::evidence::DetectedKind::Udf => {
-            extract_zip_safely(path, dest, limits)
-        }
+        | birkat_core::evidence::DetectedKind::Udf => extract_zip_safely(path, dest, limits),
         birkat_core::evidence::DetectedKind::SevenZip => Err(CoreError::Validation(
             "7z arşivi bu sürümde açılamıyor: desteklenen arşiv biçimi değil.".to_string(),
         )),
@@ -250,8 +248,8 @@ mod tests {
         let p = dir.join("arsiv.zip");
         let f = std::fs::File::create(&p).unwrap();
         let mut z = zip::ZipWriter::new(f);
-        let opts: zip::write::FileOptions<'_, ()> = zip::write::FileOptions::default()
-            .compression_method(zip::CompressionMethod::Deflated);
+        let opts: zip::write::FileOptions<'_, ()> =
+            zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
         for (name, data) in entries {
             z.start_file(*name, opts).unwrap();
             z.write_all(data).unwrap();
@@ -342,8 +340,8 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("a.7z");
         std::fs::write(&p, b"7z\xBC\xAF\x27\x1C...").unwrap();
-        let err = extract_archive_safely(&p, dir.path().join("c"), ArchiveLimits::default())
-            .unwrap_err();
+        let err =
+            extract_archive_safely(&p, dir.path().join("c"), ArchiveLimits::default()).unwrap_err();
         assert!(err.to_string().contains("7z"));
     }
 }

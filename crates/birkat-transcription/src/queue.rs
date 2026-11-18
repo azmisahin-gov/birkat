@@ -196,7 +196,12 @@ impl JobQueue {
     }
 
     /// İlerleme günceller.
-    pub fn update_progress(&mut self, index: usize, progress: f64, elapsed_secs: f64) -> Result<()> {
+    pub fn update_progress(
+        &mut self,
+        index: usize,
+        progress: f64,
+        elapsed_secs: f64,
+    ) -> Result<()> {
         let task = self
             .tasks
             .get_mut(index)
@@ -388,8 +393,12 @@ mod tests {
     fn queue_with(n: usize) -> JobQueue {
         let mut q = JobQueue::new();
         for i in 0..n {
-            q.enqueue(QueueTask::new(AudioId::new(), format!("/a/{i}.wav"), i as u32))
-                .unwrap();
+            q.enqueue(QueueTask::new(
+                AudioId::new(),
+                format!("/a/{i}.wav"),
+                i as u32,
+            ))
+            .unwrap();
         }
         q
     }
@@ -416,9 +425,7 @@ mod tests {
     fn completed_task_is_not_duplicated() {
         let mut q = JobQueue::new();
         let audio = AudioId::new();
-        let idx = q
-            .enqueue(QueueTask::new(audio.clone(), "a", 1))
-            .unwrap();
+        let idx = q.enqueue(QueueTask::new(audio.clone(), "a", 1)).unwrap();
         q.start(idx).unwrap();
         q.complete(idx, model()).unwrap();
         let idx2 = q.enqueue(QueueTask::new(audio, "a", 1)).unwrap();
@@ -512,9 +519,7 @@ mod tests {
     fn crash_recovery_preserves_completed_index() {
         let mut q = JobQueue::new();
         let audio = AudioId::new();
-        let idx = q
-            .enqueue(QueueTask::new(audio.clone(), "a", 1))
-            .unwrap();
+        let idx = q.enqueue(QueueTask::new(audio.clone(), "a", 1)).unwrap();
         q.start(idx).unwrap();
         q.complete(idx, model()).unwrap();
         let restored = JobQueue::from_json(&q.to_json()).unwrap();

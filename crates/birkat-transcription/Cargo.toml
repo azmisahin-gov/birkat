@@ -8,7 +8,7 @@ description = "BİRKÂT yerel transkripsiyon motoru, kuyruk ve kalite kontrolü"
 
 [dependencies]
 birkat-core = { workspace = true }
-birkat-audio = { workspace = true }
+birkat-audio = { workspace = true, optional = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
@@ -19,7 +19,16 @@ walkdir = { workspace = true }
 
 [features]
 default = []
-whisper = ["dep:candle-core", "dep:candle-nn", "dep:candle-transformers", "dep:tokenizers"]
+whisper = [
+    "dep:candle-core",
+    "dep:candle-nn",
+    "dep:candle-transformers",
+    "dep:tokenizers",
+    "dep:birkat-audio",
+]
+# GPU hızlandırma özellikleri (opsiyonel; başlatılamazsa CPU'ya düşülür).
+cuda = []
+metal = []
 
 [dependencies.candle-core]
 workspace = true

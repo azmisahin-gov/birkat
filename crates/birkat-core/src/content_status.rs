@@ -78,30 +78,29 @@ pub fn apply_transition(from: ContentStatus, t: StatusTransition) -> Result<Cont
     use ContentStatus::*;
     use StatusTransition as T;
 
-    let to = match (from, t) {
-        // Kalite kontrolü: makine çıktısı -> incelemeye hazır
-        (MachineOutput, T::QualityControlPassed) => ReadyForReview,
-        // İncelemeye hazır içerik kalite kontrolünden geçmiş sayılır
-        (ReadyForReview, T::QualityControlPassed) => ReadyForReview,
-        // Onay: yalnızca incelemeye hazır içerik onaylanabilir
-        (ReadyForReview, T::ExpertApproved) => ExpertApproved,
-        // Onay geri çekme
-        (ExpertApproved, T::ApprovalWithdrawn) => ReadyForReview,
-        // Yeniden üretim: her durumda makine çıktısına döner
-        (_, T::Regenerated) => MachineOutput,
+    let to =
+        match (from, t) {
+            // Kalite kontrolü: makine çıktısı -> incelemeye hazır
+            (MachineOutput, T::QualityControlPassed) => ReadyForReview,
+            // İncelemeye hazır içerik kalite kontrolünden geçmiş sayılır
+            (ReadyForReview, T::QualityControlPassed) => ReadyForReview,
+            // Onay: yalnızca incelemeye hazır içerik onaylanabilir
+            (ReadyForReview, T::ExpertApproved) => ExpertApproved,
+            // Onay geri çekme
+            (ExpertApproved, T::ApprovalWithdrawn) => ReadyForReview,
+            // Yeniden üretim: her durumda makine çıktısına döner
+            (_, T::Regenerated) => MachineOutput,
 
-        (MachineOutput, T::ExpertApproved) => {
-            return Err(CoreError::ContentStatusRule(
+            (MachineOutput, T::ExpertApproved) => return Err(CoreError::ContentStatusRule(
                 "Makine çıktısı, teknik kalite kontrolü tamamlanmadan bilirkişi onaylı sayılamaz."
                     .to_string(),
-            ))
-        }
-        (from, t) => {
-            return Err(CoreError::ContentStatusRule(format!(
-                "{from:?} durumundan {t:?} geçişine izin verilmez."
-            )))
-        }
-    };
+            )),
+            (from, t) => {
+                return Err(CoreError::ContentStatusRule(format!(
+                    "{from:?} durumundan {t:?} geçişine izin verilmez."
+                )))
+            }
+        };
 
     Ok(to)
 }

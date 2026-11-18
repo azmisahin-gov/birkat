@@ -129,20 +129,22 @@ fn profile(app: &mut BirkatApp, ui: &mut egui::Ui) {
     }
     ui.separator();
     ui.label(egui::RichText::new("Kayıtlı profiller").strong());
-    egui::Grid::new("profil_listesi").striped(true).show(ui, |ui| {
-        ui.label("Ad Soyad");
-        ui.label("Unvan");
-        ui.label("Sicil No");
-        ui.label("Uzmanlık");
-        ui.end_row();
-        for p in app.profiles() {
-            ui.label(&p.full_name);
-            ui.label(p.title.as_deref().unwrap_or("-"));
-            ui.label(p.registry_number.as_deref().unwrap_or("-"));
-            ui.label(&p.specialty);
+    egui::Grid::new("profil_listesi")
+        .striped(true)
+        .show(ui, |ui| {
+            ui.label("Ad Soyad");
+            ui.label("Unvan");
+            ui.label("Sicil No");
+            ui.label("Uzmanlık");
             ui.end_row();
-        }
-    });
+            for p in app.profiles() {
+                ui.label(&p.full_name);
+                ui.label(p.title.as_deref().unwrap_or("-"));
+                ui.label(p.registry_number.as_deref().unwrap_or("-"));
+                ui.label(&p.specialty);
+                ui.end_row();
+            }
+        });
 }
 
 fn assignment(app: &mut BirkatApp, ui: &mut egui::Ui) {
@@ -167,26 +169,28 @@ fn assignment(app: &mut BirkatApp, ui: &mut egui::Ui) {
     }
     ui.separator();
     ui.label(egui::RichText::new("Kayıtlı vakalar").strong());
-    egui::Grid::new("vaka_listesi").striped(true).show(ui, |ui| {
-        ui.label("Başlık");
-        ui.label("Dosya No");
-        ui.label("Durum");
-        ui.label("İşlem");
-        ui.end_row();
-        let cases = app.cases();
-        for c in cases {
-            if !app.matches_search(&c.title) {
-                continue;
-            }
-            ui.label(&c.title);
-            ui.label(c.assignment.file_number.as_deref().unwrap_or("-"));
-            ui.label(c.workflow.state.label());
-            if ui.button("Aç").clicked() {
-                app.open_case(c.id.as_str());
-            }
+    egui::Grid::new("vaka_listesi")
+        .striped(true)
+        .show(ui, |ui| {
+            ui.label("Başlık");
+            ui.label("Dosya No");
+            ui.label("Durum");
+            ui.label("İşlem");
             ui.end_row();
-        }
-    });
+            let cases = app.cases();
+            for c in cases {
+                if !app.matches_search(&c.title) {
+                    continue;
+                }
+                ui.label(&c.title);
+                ui.label(c.assignment.file_number.as_deref().unwrap_or("-"));
+                ui.label(c.workflow.state.label());
+                if ui.button("Aç").clicked() {
+                    app.open_case(c.id.as_str());
+                }
+                ui.end_row();
+            }
+        });
 }
 
 fn case_workspace(app: &mut BirkatApp, ui: &mut egui::Ui) {
@@ -208,7 +212,9 @@ fn case_workspace(app: &mut BirkatApp, ui: &mut egui::Ui) {
 
     ui.horizontal(|ui| {
         ui.label(egui::RichText::new(&title).heading());
-        ui.label(format!("| Durum: {state} | Dosya No: {file_no} | Kasa nesnesi: {objects}"));
+        ui.label(format!(
+            "| Durum: {state} | Dosya No: {file_no} | Kasa nesnesi: {objects}"
+        ));
     });
     ui.separator();
 
@@ -275,31 +281,33 @@ fn evidence(app: &mut BirkatApp, ui: &mut egui::Ui) {
     };
     ui.label("Kasadaki delil nesneleri. Her nesne SHA-256 ile bütünlüğe bağlıdır.");
     ui.separator();
-    egui::Grid::new("delil_listesi").striped(true).show(ui, |ui| {
-        ui.label("Yol");
-        ui.label("Özgün ad");
-        ui.label("Boyut");
-        ui.label("Şifreli");
-        ui.label("SHA-256 (kısa)");
-        ui.end_row();
-        for o in &ws.vault.manifest().objects {
-            if !app.matches_search(&o.relative_path) {
-                continue;
-            }
-            ui.label(&o.relative_path);
-            ui.label(&o.original_name);
-            ui.label(format!("{} bayt", o.size_bytes));
-            ui.label(if o.encrypted { "evet" } else { "hayır" });
-            let sha = o
-                .hashes
-                .iter()
-                .find(|h| h.algorithm == birkat_core::evidence::HashAlgorithm::Sha256)
-                .map(|h| h.value.chars().take(16).collect::<String>())
-                .unwrap_or_default();
-            ui.label(sha);
+    egui::Grid::new("delil_listesi")
+        .striped(true)
+        .show(ui, |ui| {
+            ui.label("Yol");
+            ui.label("Özgün ad");
+            ui.label("Boyut");
+            ui.label("Şifreli");
+            ui.label("SHA-256 (kısa)");
             ui.end_row();
-        }
-    });
+            for o in &ws.vault.manifest().objects {
+                if !app.matches_search(&o.relative_path) {
+                    continue;
+                }
+                ui.label(&o.relative_path);
+                ui.label(&o.original_name);
+                ui.label(format!("{} bayt", o.size_bytes));
+                ui.label(if o.encrypted { "evet" } else { "hayır" });
+                let sha = o
+                    .hashes
+                    .iter()
+                    .find(|h| h.algorithm == birkat_core::evidence::HashAlgorithm::Sha256)
+                    .map(|h| h.value.chars().take(16).collect::<String>())
+                    .unwrap_or_default();
+                ui.label(sha);
+                ui.end_row();
+            }
+        });
 }
 
 fn device(app: &mut BirkatApp, ui: &mut egui::Ui) {
@@ -628,7 +636,11 @@ fn calendar(app: &mut BirkatApp, ui: &mut egui::Ui) {
             "{} — {} ({})",
             d.kind.label(),
             d.due_at.to_rfc3339(),
-            if d.completed { "tamamlandı" } else { "bekliyor" }
+            if d.completed {
+                "tamamlandı"
+            } else {
+                "bekliyor"
+            }
         ));
     }
     ui.separator();
@@ -649,11 +661,7 @@ fn calendar(app: &mut BirkatApp, ui: &mut egui::Ui) {
 fn archive(app: &mut BirkatApp, ui: &mut egui::Ui) {
     ui.label("Vaka arşivi. Arşivlenen dosyaların tüm belgeleri, sesleri, transkriptleri, raporları ve işlem geçmişi korunur.");
     ui.separator();
-    let archived: Vec<_> = app
-        .cases()
-        .into_iter()
-        .filter(|c| c.archived)
-        .collect();
+    let archived: Vec<_> = app.cases().into_iter().filter(|c| c.archived).collect();
     if archived.is_empty() {
         ui.weak("Arşivlenmiş vaka yok.");
     }
@@ -692,7 +700,11 @@ fn backup(app: &mut BirkatApp, ui: &mut egui::Ui) {
         if let Ok(rd) = std::fs::read_dir(&yedekler) {
             for e in rd.filter_map(|e| e.ok()) {
                 let size = e.metadata().map(|m| m.len()).unwrap_or(0);
-                ui.label(format!("{} — {} bayt", e.file_name().to_string_lossy(), size));
+                ui.label(format!(
+                    "{} — {} bayt",
+                    e.file_name().to_string_lossy(),
+                    size
+                ));
             }
         }
     }

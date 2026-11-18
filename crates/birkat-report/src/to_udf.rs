@@ -44,9 +44,15 @@ pub fn report_to_udf(report: &ReportDocument, options: &ReportToUdfOptions) -> U
     doc.page.paper_orientation = report.page_setup.orientation;
 
     // Üstbilgi
-    if let Some(h) = options.header.as_ref().or(report.page_setup.header.as_ref()) {
-        doc.header
-            .push(UdfBlock::Paragraph(Paragraph::styled(h, TextStyle::sized(9.0))));
+    if let Some(h) = options
+        .header
+        .as_ref()
+        .or(report.page_setup.header.as_ref())
+    {
+        doc.header.push(UdfBlock::Paragraph(Paragraph::styled(
+            h,
+            TextStyle::sized(9.0),
+        )));
     }
 
     // Altbilgi sayfa numarası
@@ -196,14 +202,12 @@ fn push_block(doc: &mut UdfDocument, block: &Block) {
             end,
             quote,
         } => {
-            let mut p = Paragraph::text(format!(
-                "{label} [{:.3} - {:.3}]",
-                start, end
-            ));
+            let mut p = Paragraph::text(format!("{label} [{:.3} - {:.3}]", start, end));
             p.left_indent = 18.0;
             doc.push(UdfBlock::Paragraph(p));
             if let Some(q) = quote {
-                let mut qp = Paragraph::styled(format!("\u{201C}{q}\u{201D}"), TextStyle::default());
+                let mut qp =
+                    Paragraph::styled(format!("\u{201C}{q}\u{201D}"), TextStyle::default());
                 qp.left_indent = 32.0;
                 qp.alignment = 3;
                 doc.push(UdfBlock::Paragraph(qp));
@@ -258,7 +262,6 @@ pub fn number_type_udf(t: NumberType) -> &'static str {
 pub fn section_present(report: &ReportDocument, id: SectionId) -> bool {
     report.sections.iter().any(|s| s.id == id && !s.hidden)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -333,10 +336,7 @@ mod tests {
     #[test]
     fn table_becomes_udf_table() {
         let udf = report_to_udf(&sample_report(), &ReportToUdfOptions::default());
-        let has_table = udf
-            .body
-            .iter()
-            .any(|b| matches!(b, UdfBlock::Table(_)));
+        let has_table = udf.body.iter().any(|b| matches!(b, UdfBlock::Table(_)));
         assert!(has_table);
     }
 

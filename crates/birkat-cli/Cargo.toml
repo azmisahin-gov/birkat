@@ -17,7 +17,6 @@ birkat-audit = { workspace = true }
 birkat-udf = { workspace = true }
 birkat-report = { workspace = true }
 birkat-audio = { workspace = true }
-birkat-evidence = { workspace = true }
 birkat-backup = { workspace = true }
 birkat-crypto = { workspace = true }
 birkat-transcription = { workspace = true }

@@ -126,7 +126,8 @@ pub fn detect_kind_from_bytes(data: &[u8], extension: Option<&str>) -> DetectedK
     }
 
     // ASF/WMA
-    if data.len() >= 16 && data[..16] == *b"\x30\x26\xB2\x75\x8E\x66\xCF\x11\xA6\xD9\x00\xAA\x00\x62\xCE\x6C"
+    if data.len() >= 16
+        && data[..16] == *b"\x30\x26\xB2\x75\x8E\x66\xCF\x11\xA6\xD9\x00\xAA\x00\x62\xCE\x6C"
     {
         return DetectedKind::Audio("WMA/ASF".to_string());
     }
@@ -201,9 +202,7 @@ pub fn detect_kind_from_bytes(data: &[u8], extension: Option<&str>) -> DetectedK
 }
 
 fn find_ascii(haystack: &[u8], needle: &[u8]) -> Option<usize> {
-    haystack
-        .windows(needle.len())
-        .position(|w| w == needle)
+    haystack.windows(needle.len()).position(|w| w == needle)
 }
 
 /// Baytların büyük ölçüde yazdırılabilir metin olup olmadığını tahmin eder.

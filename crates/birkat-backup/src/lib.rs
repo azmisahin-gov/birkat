@@ -20,7 +20,7 @@
 
 use birkat_core::error::{CoreError, Result};
 use birkat_core::time_util::Timestamp;
-use birkat_crypto::{decrypt_with_password, encrypt_with_password, check_password_policy};
+use birkat_crypto::{check_password_policy, decrypt_with_password, encrypt_with_password};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::io::Write as _;
@@ -185,8 +185,8 @@ pub fn create_backup(
     let mut total = 0u64;
     {
         let mut zip = zip::ZipWriter::new(&mut inner);
-        let opts: zip::write::FileOptions<'_, ()> = zip::write::FileOptions::default()
-            .compression_method(zip::CompressionMethod::Deflated);
+        let opts: zip::write::FileOptions<'_, ()> =
+            zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
         // Manifesto dosyasını en son eklemek için önce içerikleri yaz.
         for (abs, rel) in &entries {
@@ -237,11 +237,11 @@ pub fn create_backup(
         let encrypted = encrypt_with_password(&options.password, &inner_bytes)?;
         std::fs::write(output.as_ref(), &encrypted)?;
         let size = encrypted.len() as u64;
-        return Ok(BackupResult {
+        Ok(BackupResult {
             path: output.as_ref().to_path_buf(),
             manifest,
             size_bytes: size,
-        });
+        })
     }
 }
 
@@ -327,8 +327,7 @@ pub struct RestoreResult {
 impl RestoreResult {
     /// Geri yükleme başarılı mı?
     pub fn ok(&self) -> bool {
-        self.hash_mismatches.is_empty()
-            && self.restored_files == self.manifest.entries.len()
+        self.hash_mismatches.is_empty() && self.restored_files == self.manifest.entries.len()
     }
 
     /// Türkçe özet.
@@ -414,7 +413,7 @@ impl RetentionPolicy {
     /// Verilen yedek listesinden saklanacakları seçer.
     pub fn select_kept(&self, backups: &[(PathBuf, Timestamp)]) -> Vec<PathBuf> {
         let mut sorted: Vec<&(PathBuf, Timestamp)> = backups.iter().collect();
-        sorted.sort_by(|a, b| b.1.cmp(&a.1)); // en yeni önce
+        sorted.sort_by_key(|(_, at)| std::cmp::Reverse(*at)); // en yeni önce
 
         let now = Timestamp::now();
         sorted
@@ -545,7 +544,11 @@ mod tests {
         let leftovers: Vec<_> = std::fs::read_dir(dir.path())
             .unwrap()
             .filter_map(|e| e.ok())
-            .filter(|e| e.file_name().to_string_lossy().starts_with("birkat-restore-test"))
+            .filter(|e| {
+                e.file_name()
+                    .to_string_lossy()
+                    .starts_with("birkat-restore-test")
+            })
             .collect();
         assert!(leftovers.is_empty(), "geçici test klasörü silinmeli");
     }

@@ -123,9 +123,7 @@ pub fn probe_from_format(
     let cp: &CodecParameters = &track.codec_params;
     let codec_name = codec_label(cp.codec);
     let sample_rate = cp.sample_rate;
-    let channels = cp
-        .channels
-        .map(|c| c.count() as u16);
+    let channels = cp.channels.map(|c| c.count() as u16);
     let bit_depth = cp.bits_per_sample.map(|b| b as u16);
     let bit_rate = cp
         .bits_per_sample
@@ -249,17 +247,13 @@ pub fn supported_format_matrix() -> Vec<(&'static str, &'static str, bool)> {
 }
 
 #[cfg(test)]
+#[doc(hidden)]
 pub mod tests {
     use super::*;
     use std::io::Write;
 
     /// Basit bir WAV dosyası üretir (PCM 16-bit mono).
-    pub fn write_test_wav(
-        path: &Path,
-        sample_rate: u32,
-        channels: u16,
-        seconds: f32,
-    ) -> Vec<i16> {
+    pub fn write_test_wav(path: &Path, sample_rate: u32, channels: u16, seconds: f32) -> Vec<i16> {
         let spec = hound::WavSpec {
             channels,
             sample_rate,
@@ -336,7 +330,8 @@ pub mod tests {
         let dir = tempfile::tempdir().unwrap();
         let p = dir.path().join("metin.txt");
         let mut f = std::fs::File::create(&p).unwrap();
-        f.write_all(b"bu bir ses dosyasi degil, sadece metin").unwrap();
+        f.write_all(b"bu bir ses dosyasi degil, sadece metin")
+            .unwrap();
         let err = probe_file(&p).unwrap_err();
         assert!(!err.to_string().is_empty());
     }
@@ -346,8 +341,8 @@ pub mod tests {
         let m = supported_format_matrix();
         let names: Vec<&str> = m.iter().map(|(n, _, _)| *n).collect();
         for required in [
-            "WAV", "BWF", "MP3", "M4A", "AAC", "FLAC", "OGG", "Opus", "WMA", "AMR", "AIFF",
-            "CAF", "MP4", "MOV", "MKV", "WebM",
+            "WAV", "BWF", "MP3", "M4A", "AAC", "FLAC", "OGG", "Opus", "WMA", "AMR", "AIFF", "CAF",
+            "MP4", "MOV", "MKV", "WebM",
         ] {
             assert!(names.contains(&required), "eksik: {required}");
         }

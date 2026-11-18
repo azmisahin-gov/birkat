@@ -9,10 +9,8 @@ description = "BİRKÂT ses envanteri, çözümleme ve inceleme çekirdeği"
 [dependencies]
 birkat-core = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
 symphonia = { workspace = true }
-hound = { workspace = true }
 walkdir = { workspace = true }
 sha2 = { workspace = true }
 hex = { workspace = true }
@@ -20,3 +18,4 @@ time = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+hound = { workspace = true }

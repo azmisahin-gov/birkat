@@ -314,12 +314,9 @@ impl Case {
         if self.assignment.subject.is_none() {
             warnings.push("İnceleme konusu belirlenmedi.".to_string());
         }
-        if self.assignment.extraction_status
-            != crate::content_status::ContentStatus::ExpertApproved
+        if self.assignment.extraction_status != crate::content_status::ContentStatus::ExpertApproved
         {
-            warnings.push(
-                "Görevlendirme bilgileri bilirkişi tarafından doğrulanmadı.".to_string(),
-            );
+            warnings.push("Görevlendirme bilgileri bilirkişi tarafından doğrulanmadı.".to_string());
         }
 
         warnings

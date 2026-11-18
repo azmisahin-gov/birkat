@@ -291,11 +291,9 @@ fn handle_end(st: &mut ParserState, name: &str) {
         "cell" => st.close_cell(),
         "row" => st.close_row(),
         "table" => st.close_table(),
-        "page-break" => {
-            if st.page_break {
-                st.page_break = false;
-                st.place_block(UdfBlock::PageBreak);
-            }
+        "page-break" if st.page_break => {
+            st.page_break = false;
+            st.place_block(UdfBlock::PageBreak);
         }
         _ => {}
     }
@@ -471,7 +469,10 @@ fn read_cell_attrs(e: &BytesStart<'_>) -> Cell {
             .get("borderColor")
             .and_then(|v| v.parse().ok())
             .unwrap_or(crate::DEFAULT_FOREGROUND),
-        border_spec: m.get("borderSpec").and_then(|v| v.parse().ok()).unwrap_or(15),
+        border_spec: m
+            .get("borderSpec")
+            .and_then(|v| v.parse().ok())
+            .unwrap_or(15),
         blocks: Vec::new(),
     }
 }
@@ -719,8 +720,7 @@ mod tests {
     #[test]
     fn header_is_separate_from_body() {
         let mut doc = UdfDocument::new();
-        doc.header
-            .push(UdfBlock::Paragraph(Paragraph::text("ÜST")));
+        doc.header.push(UdfBlock::Paragraph(Paragraph::text("ÜST")));
         doc.push(UdfBlock::Paragraph(Paragraph::text("GÖVDE")));
         let r = round_trip(doc);
         assert_eq!(r.document.header.len(), 1);

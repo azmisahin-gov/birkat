@@ -103,7 +103,10 @@ impl ModelPackage {
         self.files.clear();
         self.total_bytes = 0;
         let mut entries: Vec<PathBuf> = Vec::new();
-        for e in walkdir::WalkDir::new(&self.root).into_iter().filter_map(|e| e.ok()) {
+        for e in walkdir::WalkDir::new(&self.root)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
             if e.file_type().is_file() {
                 entries.push(e.path().to_path_buf());
             }
@@ -282,7 +285,11 @@ mod tests {
     fn tampered_file_is_detected() {
         let dir = tempfile::tempdir().unwrap();
         let pkg = make_pkg(dir.path());
-        std::fs::write(dir.path().join("models/model.safetensors"), b"degistirilmis").unwrap();
+        std::fs::write(
+            dir.path().join("models/model.safetensors"),
+            b"degistirilmis",
+        )
+        .unwrap();
         let v = pkg.verify();
         assert!(!v.ok);
         assert!(v.hash_mismatches.iter().any(|m| m.contains("model")));

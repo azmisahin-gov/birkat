@@ -165,13 +165,14 @@ mod tests {
     #[test]
     fn title_override_is_applied() {
         let mut t = ReportTemplate::standard();
-        t.title_overrides.push((
-            SectionId::Conclusion,
-            "SONUÇ VE KANAAT".to_string(),
-        ));
+        t.title_overrides
+            .push((SectionId::Conclusion, "SONUÇ VE KANAAT".to_string()));
         let mut r = report();
         t.apply(&mut r);
-        assert_eq!(r.section(SectionId::Conclusion).unwrap().title, "SONUÇ VE KANAAT");
+        assert_eq!(
+            r.section(SectionId::Conclusion).unwrap().title,
+            "SONUÇ VE KANAAT"
+        );
     }
 
     #[test]
@@ -184,7 +185,10 @@ mod tests {
             ReportTemplate::for_kind(ReportKind::Supplementary).name,
             "Ek rapor"
         );
-        assert_eq!(ReportTemplate::for_kind(ReportKind::Main).name, "Standart bilirkişi raporu");
+        assert_eq!(
+            ReportTemplate::for_kind(ReportKind::Main).name,
+            "Standart bilirkişi raporu"
+        );
     }
 
     #[test]

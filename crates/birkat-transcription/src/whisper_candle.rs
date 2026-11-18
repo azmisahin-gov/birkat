@@ -31,8 +31,8 @@
 //!   garanti edilmiş gibi sunulmaz.
 
 use crate::engine::{
-    EngineCapabilities, TranscriptionEngine, TranscriptionOutput, TranscriptionRequest,
-    TranscriptSegmentDraft, WordTimestamps,
+    EngineCapabilities, TranscriptSegmentDraft, TranscriptionEngine, TranscriptionOutput,
+    TranscriptionRequest, WordTimestamps,
 };
 use birkat_core::error::{CoreError, Result};
 use candle_core::{DType, Device, IndexOp, Tensor, D};
@@ -144,7 +144,12 @@ impl WhisperCandleEngine {
     }
 
     /// Tek bir mel parçasını çözer (açgözlü üretim).
-    fn decode_chunk(&self, model: &mut m::model::Whisper, mel: &Tensor, language: Option<&str>) -> Result<String> {
+    fn decode_chunk(
+        &self,
+        model: &mut m::model::Whisper,
+        mel: &Tensor,
+        language: Option<&str>,
+    ) -> Result<String> {
         let audio_features = model
             .encoder
             .forward(mel, true)
@@ -478,11 +483,7 @@ mod tests {
         let centers: Vec<usize> = (0..n_mels)
             .map(|m| {
                 (0..n_freqs)
-                    .max_by(|&a, &b| {
-                        f[a * n_mels + m]
-                            .partial_cmp(&f[b * n_mels + m])
-                            .unwrap()
-                    })
+                    .max_by(|&a, &b| f[a * n_mels + m].partial_cmp(&f[b * n_mels + m]).unwrap())
                     .unwrap()
             })
             .collect();

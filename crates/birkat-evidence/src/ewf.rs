@@ -135,10 +135,7 @@ impl EwfReader {
     /// İmajın mantıksal akışını bir yazıcıya kopyalar.
     ///
     /// Mantıksal imajdan dosya çıkarma ve ham dışa aktarma için kullanılır.
-    pub fn extract_stream(
-        path: impl AsRef<Path>,
-        mut out: impl std::io::Write,
-    ) -> Result<u64> {
+    pub fn extract_stream(path: impl AsRef<Path>, mut out: impl std::io::Write) -> Result<u64> {
         let image = ewf_image::Image::open(path.as_ref())
             .map_err(|e| CoreError::Data(format!("EWF imajı açılamadı: {e}")))?;
         let mut cursor = image.cursor();
@@ -247,9 +244,11 @@ impl EwfWriter {
             }
         };
 
-        let mut options = ewf_image::WriteOptions::default();
-        options.format = write_format;
-        options.compression = ewf_image::WriteCompression::Zlib;
+        let mut options = ewf_image::WriteOptions {
+            format: write_format,
+            compression: ewf_image::WriteCompression::Zlib,
+            ..Default::default()
+        };
         for (k, v) in metadata {
             options.metadata.set_header_value(k.as_str(), v.as_str());
         }
@@ -269,10 +268,7 @@ impl EwfWriter {
     ///
     /// Sektör düzeyinde okuma platform katmanında yapılır; bu işlev gelen
     /// bayt akışını yazar ve okunamayan sektörleri raporlar.
-    pub fn write_raw(
-        source: impl std::io::Read,
-        output: impl AsRef<Path>,
-    ) -> Result<u64> {
+    pub fn write_raw(source: impl std::io::Read, output: impl AsRef<Path>) -> Result<u64> {
         let mut out = std::fs::File::create(output.as_ref())?;
         let mut src = source;
         let n = std::io::copy(&mut src, &mut out)?;
@@ -379,7 +375,10 @@ pub fn segment_files(primary: &Path) -> Vec<PathBuf> {
 /// Ham imajı hash'ler ve rapor üretir.
 pub fn hash_raw_image(path: impl AsRef<Path>) -> Result<Vec<(HashAlgorithm, String)>> {
     let digests = crate::hash::hash_file_all(path)?;
-    Ok(digests.into_iter().map(|d| (d.algorithm, d.value)).collect())
+    Ok(digests
+        .into_iter()
+        .map(|d| (d.algorithm, d.value))
+        .collect())
 }
 
 #[cfg(test)]
@@ -388,8 +387,14 @@ mod tests {
 
     #[test]
     fn format_from_extension() {
-        assert_eq!(format_from_path(Path::new("a.E01")).unwrap(), ImageFormat::E01);
-        assert_eq!(format_from_path(Path::new("a.l01")).unwrap(), ImageFormat::L01);
+        assert_eq!(
+            format_from_path(Path::new("a.E01")).unwrap(),
+            ImageFormat::E01
+        );
+        assert_eq!(
+            format_from_path(Path::new("a.l01")).unwrap(),
+            ImageFormat::L01
+        );
         assert_eq!(
             format_from_path(Path::new("a.Ex01")).unwrap(),
             ImageFormat::Ex01
@@ -398,7 +403,10 @@ mod tests {
             format_from_path(Path::new("a.Lx01")).unwrap(),
             ImageFormat::Lx01
         );
-        assert_eq!(format_from_path(Path::new("a.dd")).unwrap(), ImageFormat::Raw);
+        assert_eq!(
+            format_from_path(Path::new("a.dd")).unwrap(),
+            ImageFormat::Raw
+        );
         assert!(format_from_path(Path::new("a.xyz")).is_err());
         assert!(format_from_path(Path::new("noext")).is_err());
     }
@@ -413,9 +421,7 @@ mod tests {
         assert_eq!(std::fs::read(&out).unwrap(), data);
         let hashes = hash_raw_image(&out).unwrap();
         assert_eq!(hashes.len(), 3);
-        assert!(hashes
-            .iter()
-            .any(|(a, _)| *a == HashAlgorithm::Sha256));
+        assert!(hashes.iter().any(|(a, _)| *a == HashAlgorithm::Sha256));
     }
 
     #[test]
@@ -474,13 +480,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let out = dir.path().join("v.E01");
         let data = vec![1u8; 16 * 1024];
-        EwfWriter::write_physical(
-            std::io::Cursor::new(data),
-            &out,
-            ImageFormat::E01,
-            &[],
-        )
-        .unwrap();
+        EwfWriter::write_physical(std::io::Cursor::new(data), &out, ImageFormat::E01, &[]).unwrap();
         let v = EwfReader::verify(&out).unwrap();
         assert!(v.all_match(), "imaj kendi hash'iyle eşleşmeli");
         assert!(v.limitation_note().contains("kanıtlamaz"));

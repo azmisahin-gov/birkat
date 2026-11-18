@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  test:
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust kurulumu
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Bağımlılık önbelleği
+        uses: Swatinem/rust-cache@v2
+
+      - name: Linux sistem bağımlılıkları
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libx11-dev \
+            libxcursor-dev libxrandr-dev libxi-dev libgl1-mesa-dev \
+            pkg-config libssl-dev
+
+      - name: Biçim denetimi
+        run: cargo fmt --all -- --check
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Derleme
+        run: cargo build --workspace --all-targets
+
+      - name: Testler
+        run: cargo test --workspace
+
+      - name: Whisper özelliği ile derleme
+        run: cargo build -p birkat-transcription --features whisper
+
+      - name: Whisper özelliği ile testler
+        run: cargo test -p birkat-transcription --features whisper
+
+  audit:
+    name: Bağımlılık denetimi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: cargo-audit kurulumu
+        run: cargo install cargo-audit --locked
+
+      - name: Güvenlik açığı denetimi
+        run: cargo audit
+
+      - name: cargo-deny kurulumu
+        run: cargo install cargo-deny --locked
+
+      - name: Lisans ve bağımlılık denetimi
+        run: cargo deny check licenses advisories
+        continue-on-error: true
+
+  sbom:
+    name: SBOM üretimi
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - name: SBOM ve lisans belgesi üret
+        run: |
+          cargo metadata --format-version 1 --all-features > /tmp/meta.json
+          python3 scripts/generate-sbom.py < /tmp/meta.json
+
+      - name: Değişiklik var mı denetle
+        run: |
+          if ! git diff --quiet docs/sbom.cdx.json docs/bagimlilik-lisanslari.md; then
+            echo "SBOM veya lisans belgesi güncel değil."
+            echo "Yerel olarak 'python3 scripts/generate-sbom.py < meta.json' çalıştırın."
+            exit 1
+          fi

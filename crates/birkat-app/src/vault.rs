@@ -72,7 +72,9 @@ pub struct VaultManifest {
 impl VaultManifest {
     /// Nesneyi yolla bulur.
     pub fn find(&self, relative_path: &str) -> Option<&VaultObject> {
-        self.objects.iter().find(|o| o.relative_path == relative_path)
+        self.objects
+            .iter()
+            .find(|o| o.relative_path == relative_path)
     }
 
     /// Toplam boyut.
@@ -83,9 +85,9 @@ impl VaultManifest {
     /// SHA-256 ile nesne arar (yinelenen tespiti).
     pub fn find_by_sha256(&self, sha: &str) -> Option<&VaultObject> {
         self.objects.iter().find(|o| {
-            o.hashes.iter().any(|h| {
-                h.algorithm == HashAlgorithm::Sha256 && h.value.eq_ignore_ascii_case(sha)
-            })
+            o.hashes
+                .iter()
+                .any(|h| h.algorithm == HashAlgorithm::Sha256 && h.value.eq_ignore_ascii_case(sha))
         })
     }
 }

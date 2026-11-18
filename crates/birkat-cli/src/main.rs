@@ -214,7 +214,10 @@ fn main() -> Result<()> {
             if list.is_empty() {
                 println!("Kayıtlı profil yok.");
             } else {
-                println!("{:<38} {:<24} {:<12} {}", "Kimlik", "Ad Soyad", "Sicil No", "Uzmanlık");
+                println!(
+                    "{:<38} {:<24} {:<12} Uzmanlık",
+                    "Kimlik", "Ad Soyad", "Sicil No"
+                );
                 for p in list {
                     println!(
                         "{:<38} {:<24} {:<12} {}",
@@ -253,7 +256,7 @@ fn main() -> Result<()> {
             if cases.is_empty() {
                 println!("Kayıtlı vaka yok.");
             } else {
-                println!("{:<38} {:<28} {:<22} {}", "Kimlik", "Başlık", "Dosya No", "Durum");
+                println!("{:<38} {:<28} {:<22} Durum", "Kimlik", "Başlık", "Dosya No");
                 for c in cases {
                     println!(
                         "{:<38} {:<28} {:<22} {}",
@@ -289,7 +292,8 @@ fn main() -> Result<()> {
                         .unwrap_or(e.path())
                         .to_string_lossy()
                         .replace('\\', "/");
-                    ws.vault.store_file(e.path(), &rel, &yol.display().to_string())?;
+                    ws.vault
+                        .store_file(e.path(), &rel, &yol.display().to_string())?;
                     count += 1;
                 }
                 println!("{count} dosya kasaya alındı.");
@@ -357,7 +361,9 @@ fn main() -> Result<()> {
                 .vault
                 .read_object("rapor/rapor-girdisi.json")
                 .ok()
-                .and_then(|d| serde_json::from_slice::<birkat_report::builder::ReportBuildInput>(&d).ok())
+                .and_then(|d| {
+                    serde_json::from_slice::<birkat_report::builder::ReportBuildInput>(&d).ok()
+                })
                 .unwrap_or_default();
             let report = birkat_report::build_report(
                 &ws.case,
@@ -509,7 +515,10 @@ fn main() -> Result<()> {
                 },
                 vec![case_id.to_string()],
                 None,
-                Some(format!("{} vaka olayı", store.load_audit_chain()?.events.len())),
+                Some(format!(
+                    "{} vaka olayı",
+                    store.load_audit_chain()?.events.len()
+                )),
             )?;
             println!("Yedek oluşturuldu: {}", result.path.display());
             println!(
@@ -548,7 +557,11 @@ fn main() -> Result<()> {
             println!("Doğrulanan olay: {}", v.checked);
             println!(
                 "Bağımsız zaman damgası yerine geçer mi: {}",
-                if v.is_independent_timestamp { "evet" } else { "hayır" }
+                if v.is_independent_timestamp {
+                    "evet"
+                } else {
+                    "hayır"
+                }
             );
             println!(
                 "Not: Yerel hash zinciri, harici güvenilir zaman damgası veya \
@@ -601,19 +614,28 @@ fn main() -> Result<()> {
                 );
             }
             if !d.pending_exceptions.is_empty() {
-                println!("\nİnceleme bekleyen istisnalar ({}):", d.pending_exceptions.len());
+                println!(
+                    "\nİnceleme bekleyen istisnalar ({}):",
+                    d.pending_exceptions.len()
+                );
                 for (t, m) in &d.pending_exceptions {
                     println!("  [{t}] {m}");
                 }
             }
             if !d.awaiting_report_review.is_empty() {
-                println!("\nRapor kontrolü bekleyen dosyalar ({}):", d.awaiting_report_review.len());
+                println!(
+                    "\nRapor kontrolü bekleyen dosyalar ({}):",
+                    d.awaiting_report_review.len()
+                );
                 for c in &d.awaiting_report_review {
                     println!("  {:<30} {}", c.title, c.state);
                 }
             }
             if !d.awaiting_delivery.is_empty() {
-                println!("\nTeslim bekleyen dosyalar ({}):", d.awaiting_delivery.len());
+                println!(
+                    "\nTeslim bekleyen dosyalar ({}):",
+                    d.awaiting_delivery.len()
+                );
                 for c in &d.awaiting_delivery {
                     println!("  {:<30} {}", c.title, c.state);
                 }
@@ -629,7 +651,11 @@ fn main() -> Result<()> {
 
         Komut::Surum => {
             println!("BİRKÂT {}", birkat_core::APP_VERSION);
-            println!("Uzmanlık: {} — {}", birkat_core::SPECIALTY_CODE, birkat_core::SPECIALTY_NAME);
+            println!(
+                "Uzmanlık: {} — {}",
+                birkat_core::SPECIALTY_CODE,
+                birkat_core::SPECIALTY_NAME
+            );
             println!("Veri modeli sürümü: {}", birkat_core::MODEL_VERSION);
             println!("Veri kök dizini: {}", cli.veri.display());
             println!("Not: {}", birkat_audio::waveform::interpretation_note());

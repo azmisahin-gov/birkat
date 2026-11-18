@@ -10,9 +10,7 @@
 //! onayının yerine geçmez.
 
 use crate::hallucination;
-use birkat_core::audio::{
-    QualityFinding, QualityFindingKind, QualityReport, QualitySeverity,
-};
+use birkat_core::audio::{QualityFinding, QualityFindingKind, QualityReport, QualitySeverity};
 use birkat_core::time_util::Timestamp;
 
 /// Kalite kontrol girdisi — tek bir segment.
@@ -139,9 +137,7 @@ fn check_gaps_and_silence(input: &QualityControlInput, findings: &mut Vec<Qualit
                 segment_index: Some(s.index),
                 start: Some(prev_end),
                 end: Some(s.start),
-                description: format!(
-                    "Segmentler arasında {gap:.1} saniyelik uzun sessizlik var."
-                ),
+                description: format!("Segmentler arasında {gap:.1} saniyelik uzun sessizlik var."),
             });
         }
         if gap > 2.0 && gap < input.long_silence_secs {
@@ -307,7 +303,11 @@ fn check_proper_nouns(input: &QualityControlInput, findings: &mut Vec<QualityFin
         for w in words {
             let clean = w.trim_matches(|c: char| !c.is_alphanumeric());
             if clean.chars().count() >= 2
-                && clean.chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
+                && clean
+                    .chars()
+                    .next()
+                    .map(|c| c.is_uppercase())
+                    .unwrap_or(false)
                 && clean.chars().skip(1).any(|c| c.is_lowercase())
             {
                 findings.push(finding(
@@ -369,8 +369,20 @@ fn contains_negation(text: &str) -> bool {
     let lowered = text.to_lowercase();
     // Türkçe olumsuzluk ekleri ve sözcükleri.
     const NEG: &[&str] = &[
-        " değil", " yok", "olmadı", "etmedi", "yapmadı", "bilmiyor", "gelmedi", "gitmedi",
-        "söylemedi", "duymadı", "görmedi", "hiçbir", "asla", "hayır",
+        " değil",
+        " yok",
+        "olmadı",
+        "etmedi",
+        "yapmadı",
+        "bilmiyor",
+        "gelmedi",
+        "gitmedi",
+        "söylemedi",
+        "duymadı",
+        "görmedi",
+        "hiçbir",
+        "asla",
+        "hayır",
     ];
     NEG.iter().any(|n| lowered.contains(n))
 }
@@ -535,10 +547,12 @@ mod tests {
             ..Default::default()
         };
         let r = run_quality_control(&input);
-        assert!(r
-            .findings
-            .iter()
-            .any(|f| f.kind == QualityFindingKind::Negation && f.severity == QualitySeverity::High));
+        assert!(
+            r.findings
+                .iter()
+                .any(|f| f.kind == QualityFindingKind::Negation
+                    && f.severity == QualitySeverity::High)
+        );
     }
 
     #[test]

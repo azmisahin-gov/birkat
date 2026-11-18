@@ -88,7 +88,7 @@ pub fn run_automatic_workflow(
     data_root: &std::path::Path,
 ) -> Result<WorkflowOutcome> {
     let mut out = WorkflowOutcome::default();
-    let mut step = |out: &mut WorkflowOutcome, s: &str| out.steps.push(s.to_string());
+    let step = |out: &mut WorkflowOutcome, s: &str| out.steps.push(s.to_string());
 
     step(&mut out, "Materyaller envantere alınıyor");
     workspace.advance_workflow(store, birkat_core::workflow::WorkflowState::Acquisition)?;
@@ -131,7 +131,8 @@ pub fn run_automatic_workflow(
                 .unwrap_or_default(),
             &root.display().to_string(),
         ) {
-            out.warnings.push(format!("{} alınamadı: {e}", root.display()));
+            out.warnings
+                .push(format!("{} alınamadı: {e}", root.display()));
         }
     }
     workspace.commit(
@@ -142,7 +143,10 @@ pub fn run_automatic_workflow(
         serde_json::json!({ "roots": material_roots.len() }),
     )?;
 
-    step(&mut out, "Ses dosyaları tespit ediliyor ve teknik envanter çıkarılıyor");
+    step(
+        &mut out,
+        "Ses dosyaları tespit ediliyor ve teknik envanter çıkarılıyor",
+    );
     let inventory = birkat_audio::build_inventory(material_roots, true)?;
     out.audio_files = inventory.audio_files;
 
@@ -168,8 +172,12 @@ pub fn run_automatic_workflow(
                     .file_name()
                     .map(|n| n.to_string_lossy().to_string())
                     .unwrap_or_default(),
-                container: m.map(|m| m.container.clone()).unwrap_or_else(|| e.detected.label()),
-                codec: m.map(|m| m.codec.clone()).unwrap_or_else(|| "-".to_string()),
+                container: m
+                    .map(|m| m.container.clone())
+                    .unwrap_or_else(|| e.detected.label()),
+                codec: m
+                    .map(|m| m.codec.clone())
+                    .unwrap_or_else(|| "-".to_string()),
                 duration_secs: m.and_then(|m| m.duration_secs),
                 channels: m.and_then(|m| m.channels),
                 sample_rate: m.and_then(|m| m.sample_rate),
@@ -192,7 +200,10 @@ pub fn run_automatic_workflow(
     workspace.advance_workflow(store, birkat_core::workflow::WorkflowState::Inventory)?;
 
     // 9-11: Transkripsiyon kuyruğu ve üretim.
-    step(&mut out, "Transkripsiyon kuyruğu hazırlanıyor ve çalıştırılıyor");
+    step(
+        &mut out,
+        "Transkripsiyon kuyruğu hazırlanıyor ve çalıştırılıyor",
+    );
     let mut queue = birkat_transcription::JobQueue::new();
     let transcribable: Vec<_> = inventory.transcribable_entries();
     for (i, e) in transcribable.iter().enumerate() {
@@ -205,7 +216,10 @@ pub fn run_automatic_workflow(
         task.audio_duration = e.probe.as_ref().and_then(|p| p.metadata.duration_secs);
         queue.enqueue(task)?;
     }
-    workspace.advance_workflow(store, birkat_core::workflow::WorkflowState::TranscriptionQueued)?;
+    workspace.advance_workflow(
+        store,
+        birkat_core::workflow::WorkflowState::TranscriptionQueued,
+    )?;
 
     let mut review_segments_total = 0usize;
     while let Some(idx) = queue.next_runnable() {
@@ -216,7 +230,13 @@ pub fn run_automatic_workflow(
         let request = TranscriptionRequest {
             audio: audio_id.clone(),
             path: path.clone(),
-            language: if workspace.case.assignment.special_instructions.iter().any(|s| s.contains("İngilizce")) {
+            language: if workspace
+                .case
+                .assignment
+                .special_instructions
+                .iter()
+                .any(|s| s.contains("İngilizce"))
+            {
                 Some("en".to_string())
             } else {
                 None
@@ -236,7 +256,13 @@ pub fn run_automatic_workflow(
                     version: engine.capabilities().version,
                     file_hash: String::new(),
                     license: "MIT".to_string(),
-                    path: workspace.case.assignment.special_instructions.first().cloned().unwrap_or_default(),
+                    path: workspace
+                        .case
+                        .assignment
+                        .special_instructions
+                        .first()
+                        .cloned()
+                        .unwrap_or_default(),
                 };
                 queue.complete(idx, model)?;
 
@@ -336,12 +362,32 @@ pub fn run_automatic_workflow(
                     uncertain: Vec::new(),
                 });
 
+                // Kullanılan model ve parametreleri rapora aktar (14.3).
+                if out.report_input.model_info.is_none() {
+                    let caps = engine.capabilities();
+                    out.report_input.model_info = Some(birkat_report::builder::ModelInfo {
+                        name: caps.name,
+                        version: caps.version,
+                        file_hash: transcript
+                            .model
+                            .as_ref()
+                            .map(|m| m.file_hash.clone())
+                            .unwrap_or_default(),
+                        backend: engine_out.device.clone(),
+                        precision: "f16".to_string(),
+                        chunk_secs: request.chunk_secs,
+                        overlap_secs: request.overlap_secs,
+                        language: engine_out.language.clone(),
+                    });
+                }
+
                 out.transcripts.push(transcript);
                 out.transcribed_files += 1;
             }
             Err(e) => {
                 queue.fail(idx, e.to_string())?;
-                out.warnings.push(format!("{path} metne dönüştürülemedi: {e}"));
+                out.warnings
+                    .push(format!("{path} metne dönüştürülemedi: {e}"));
             }
         }
     }
@@ -351,10 +397,7 @@ pub fn run_automatic_workflow(
     workspace.commit(
         store,
         birkat_audit::AuditAction::Transcription,
-        format!(
-            "{} ses dosyası metne dönüştürüldü",
-            out.transcribed_files
-        ),
+        format!("{} ses dosyası metne dönüştürüldü", out.transcribed_files),
         None,
         serde_json::json!({ "transcribed": out.transcribed_files }),
     )?;
@@ -465,7 +508,7 @@ mod tests {
         let out = run_automatic_workflow(
             &mut ws,
             &mut store,
-            &[materials.clone()],
+            std::slice::from_ref(&materials),
             &engine,
             dir.path(),
         )
@@ -607,7 +650,12 @@ mod tests {
             dir.path(),
         )
         .unwrap();
-        assert!(ws.vault.manifest().objects.iter().any(|o| o.relative_path.contains("transkriptler")));
+        assert!(ws
+            .vault
+            .manifest()
+            .objects
+            .iter()
+            .any(|o| o.relative_path.contains("transkriptler")));
     }
 
     #[test]

@@ -94,8 +94,7 @@ impl WriteProtectionPlan {
         self.steps.push(add("Aygıtın tanımlanması"));
         self.steps
             .push(add("Sistem diski olup olmadığının kontrolü"));
-        self.steps
-            .push(add("Mevcut koruma durumunun sorgulanması"));
+        self.steps.push(add("Mevcut koruma durumunun sorgulanması"));
         self.steps.push(add("Gerekli yönetici yetkisinin kontrolü"));
         self.steps.push(add("Kullanıcı onayı"));
         self.steps
@@ -105,7 +104,8 @@ impl WriteProtectionPlan {
         self.steps
             .push(add("Sonucun vaka işlem geçmişine eklenmesi"));
 
-        self.requires_admin = !self.current.is_protected() || self.current == WriteProtectionState::None;
+        self.requires_admin =
+            !self.current.is_protected() || self.current == WriteProtectionState::None;
 
         if self.is_system_disk {
             self.warnings.push(
@@ -114,9 +114,8 @@ impl WriteProtectionPlan {
             );
         }
         if !self.has_admin && self.requires_admin {
-            self.warnings.push(
-                "Yazılımsal koruma için yönetici yetkisi gerekiyor; yetki yok.".to_string(),
-            );
+            self.warnings
+                .push("Yazılımsal koruma için yönetici yetkisi gerekiyor; yetki yok.".to_string());
         }
         if matches!(self.current, WriteProtectionState::None) {
             self.warnings.push(
@@ -255,12 +254,7 @@ mod tests {
 
     #[test]
     fn system_disk_cannot_be_protected() {
-        let mut p = WriteProtectionPlan::new(
-            "Disk 0",
-            true,
-            WriteProtectionState::None,
-            true,
-        );
+        let mut p = WriteProtectionPlan::new("Disk 0", true, WriteProtectionState::None, true);
         p.user_approved = true;
         assert!(!p.can_apply());
         let v = p.apply(true);
@@ -269,12 +263,10 @@ mod tests {
 
     #[test]
     fn requires_admin_and_approval() {
-        let mut p =
-            WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, false);
+        let mut p = WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, false);
         p.user_approved = true;
         assert!(!p.can_apply(), "yönetici yetkisi yok");
-        let mut p2 =
-            WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, true);
+        let mut p2 = WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, true);
         assert!(!p2.can_apply(), "onay yok");
         p2.user_approved = true;
         assert!(p2.can_apply());
@@ -282,26 +274,30 @@ mod tests {
 
     #[test]
     fn software_protection_is_not_hardware_level() {
-        let mut p =
-            WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, true);
+        let mut p = WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, true);
         p.user_approved = true;
         let v = p.apply(true);
         assert!(v.applied);
         assert!(v.may_report_as_protected());
-        assert_eq!(v.resulting_state, WriteProtectionState::WindowsSoftwareReadOnly);
+        assert_eq!(
+            v.resulting_state,
+            WriteProtectionState::WindowsSoftwareReadOnly
+        );
         assert!(!v.resulting_state.is_hardware_level());
     }
 
     #[test]
     fn failed_os_call_yields_unverified() {
-        let mut p =
-            WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, true);
+        let mut p = WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, true);
         p.user_approved = true;
         let v = p.apply(false);
         assert!(!v.applied);
         assert!(!v.verified);
         assert!(!v.may_report_as_protected());
-        assert!(matches!(v.resulting_state, WriteProtectionState::Unverified(_)));
+        assert!(matches!(
+            v.resulting_state,
+            WriteProtectionState::Unverified(_)
+        ));
     }
 
     #[test]
@@ -317,8 +313,7 @@ mod tests {
 
     #[test]
     fn no_protection_recommends_hardware() {
-        let p =
-            WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, true);
+        let p = WriteProtectionPlan::new("Disk 1", false, WriteProtectionState::None, true);
         assert!(p.hardware_recommended());
         assert!(p
             .warnings
@@ -337,7 +332,10 @@ mod tests {
     fn write_probe_interpretation() {
         let v = interpret_write_probe(true, false);
         assert!(v.may_report_as_protected());
-        assert_eq!(v.resulting_state, WriteProtectionState::DeviceReadOnlySwitch);
+        assert_eq!(
+            v.resulting_state,
+            WriteProtectionState::DeviceReadOnlySwitch
+        );
 
         let v2 = interpret_write_probe(false, true);
         assert!(!v2.may_report_as_protected());

@@ -199,8 +199,8 @@ mod tests {
         let mut im = vec![0.0f32; n];
         fft_in_place(&mut re, &mut im);
         assert!((re[0] - 8.0).abs() < 1e-4);
-        for k in 1..n {
-            assert!(re[k].abs() < 1e-4, "k={k} re={}", re[k]);
+        for (k, v) in re.iter().enumerate().skip(1) {
+            assert!(v.abs() < 1e-4, "k={k} re={v}");
         }
     }
 

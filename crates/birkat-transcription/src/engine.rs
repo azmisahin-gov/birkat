@@ -119,10 +119,7 @@ impl TranscriptionOutput {
 
     /// Toplam süre.
     pub fn duration_secs(&self) -> f64 {
-        self.segments
-            .iter()
-            .map(|s| s.end)
-            .fold(0.0f64, f64::max)
+        self.segments.iter().map(|s| s.end).fold(0.0f64, f64::max)
     }
 }
 

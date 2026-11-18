@@ -26,8 +26,8 @@ pub fn report_to_docx(report: &ReportDocument) -> Result<Vec<u8>, DocxError> {
     let mut cursor = std::io::Cursor::new(Vec::new());
     {
         let mut zip = zip::ZipWriter::new(&mut cursor);
-        let opts: zip::write::FileOptions<'_, ()> = zip::write::FileOptions::default()
-            .compression_method(zip::CompressionMethod::Deflated);
+        let opts: zip::write::FileOptions<'_, ()> =
+            zip::write::FileOptions::default().compression_method(zip::CompressionMethod::Deflated);
 
         zip.start_file("[Content_Types].xml", opts)?;
         zip.write_all(CONTENT_TYPES.as_bytes())?;
@@ -50,7 +50,10 @@ pub fn report_to_docx(report: &ReportDocument) -> Result<Vec<u8>, DocxError> {
 }
 
 /// Raporu DOCX olarak dosyaya yazar.
-pub fn write_docx(report: &ReportDocument, path: impl AsRef<std::path::Path>) -> Result<(), DocxError> {
+pub fn write_docx(
+    report: &ReportDocument,
+    path: impl AsRef<std::path::Path>,
+) -> Result<(), DocxError> {
     let bytes = report_to_docx(report)?;
     std::fs::write(path, bytes)?;
     Ok(())
@@ -163,10 +166,7 @@ fn block_xml(block: &Block) -> String {
             speaker,
             text,
         } => paragraph(
-            &format!(
-                "{time_code}  {}: {text}",
-                speaker.as_deref().unwrap_or("-")
-            ),
+            &format!("{time_code}  {}: {text}", speaker.as_deref().unwrap_or("-")),
             None,
             None,
         ),

@@ -19,7 +19,9 @@ fn main() {
             align: Align::Justify,
         },
     );
-    let out = std::env::args().nth(1).unwrap_or("/tmp/birkat_test.pdf".to_string());
+    let out = std::env::args()
+        .nth(1)
+        .unwrap_or("/tmp/birkat_test.pdf".to_string());
     write_pdf(&r, &out).unwrap();
     println!("yazıldı: {out}");
 }

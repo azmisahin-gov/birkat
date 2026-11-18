@@ -243,9 +243,9 @@ pub fn decrypt(key: &SecretKey, blob: &[u8]) -> Result<Vec<u8>> {
     let header = read_header(blob)?;
     let cipher = Aes256Gcm::new(Key::<Aes256Gcm>::from_slice(key.as_bytes()));
     let nonce = Nonce::from_slice(&header.nonce);
-    cipher
-        .decrypt(nonce, &blob[HEADER_LEN..])
-        .map_err(|_| CoreError::Data("Çözme başarısız: anahtar hatalı veya veri bozuk.".to_string()))
+    cipher.decrypt(nonce, &blob[HEADER_LEN..]).map_err(|_| {
+        CoreError::Data("Çözme başarısız: anahtar hatalı veya veri bozuk.".to_string())
+    })
 }
 
 /// Parola ile veriyi şifreler.
@@ -423,7 +423,10 @@ mod tests {
     fn password_policy_rejects_weak() {
         assert!(!check_password_policy("kısa").ok);
         assert!(!check_password_policy("123456789012").ok);
-        assert!(!check_password_policy("Guvenli-Parola-42").ok, "zayıf sözcük içeriyor");
+        assert!(
+            !check_password_policy("Guvenli-Parola-42").ok,
+            "zayıf sözcük içeriyor"
+        );
         assert!(check_password_policy("Adli-Bilisim-2026").ok);
     }
 

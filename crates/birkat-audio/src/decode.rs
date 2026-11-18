@@ -126,10 +126,7 @@ pub fn decode_to_pcm(path: impl AsRef<Path>) -> Result<PcmBuffer> {
         .map_err(|e| CoreError::Data(format!("Codec çözülemedi: {e}")))?;
 
     let mut sample_rate = codec_params.sample_rate.unwrap_or(0);
-    let mut channels: u16 = codec_params
-        .channels
-        .map(|c| c.count() as u16)
-        .unwrap_or(1);
+    let mut channels: u16 = codec_params.channels.map(|c| c.count() as u16).unwrap_or(1);
     let mut ch_buf: Vec<Vec<f32>> = vec![Vec::new(); channels as usize];
 
     loop {

@@ -167,7 +167,10 @@ fn make_row(c: &Case, now: Timestamp) -> DashboardCaseRow {
         Some(d) => {
             let delta = d.inner() - now.inner();
             if delta.whole_seconds() < 0 {
-                (Some(format!("GECİKTİ: {}", humanize_duration(-delta))), true)
+                (
+                    Some(format!("GECİKTİ: {}", humanize_duration(-delta))),
+                    true,
+                )
             } else {
                 (Some(humanize_duration(delta)), false)
             }
@@ -251,7 +254,11 @@ mod tests {
         let d = build_dashboard(&s, 30).unwrap();
         assert!(d.has_overdue());
         assert!(d.active_cases[0].overdue);
-        assert!(d.active_cases[0].due_in.as_ref().unwrap().contains("GECİKTİ"));
+        assert!(d.active_cases[0]
+            .due_in
+            .as_ref()
+            .unwrap()
+            .contains("GECİKTİ"));
     }
 
     #[test]
@@ -283,20 +290,22 @@ mod tests {
     fn unanswered_questions_appear_as_exceptions() {
         let mut s = CaseStore::open_in_memory().unwrap();
         let mut c = Case::new("Soru", court());
-        c.assignment.questions.push(birkat_core::case::AssignmentQuestion {
-            id: birkat_core::ids::QuestionId::new(),
-            ordinal: 1,
-            original_text: "Soru?".into(),
-            related_evidence: vec![],
-            related_segments: vec![],
-            related_findings: vec![],
-            requirement: None,
-            expert_note: None,
-            draft_answer: None,
-            final_answer: None,
-            answer_status: birkat_core::content_status::ContentStatus::MachineOutput,
-            out_of_scope: false,
-        });
+        c.assignment
+            .questions
+            .push(birkat_core::case::AssignmentQuestion {
+                id: birkat_core::ids::QuestionId::new(),
+                ordinal: 1,
+                original_text: "Soru?".into(),
+                related_evidence: vec![],
+                related_segments: vec![],
+                related_findings: vec![],
+                requirement: None,
+                expert_note: None,
+                draft_answer: None,
+                final_answer: None,
+                answer_status: birkat_core::content_status::ContentStatus::MachineOutput,
+                out_of_scope: false,
+            });
         s.save_case(&c).unwrap();
         let d = build_dashboard(&s, 30).unwrap();
         assert!(!d.pending_exceptions.is_empty());
@@ -306,9 +315,8 @@ mod tests {
     fn unacknowledged_scope_warning_appears() {
         let mut s = CaseStore::open_in_memory().unwrap();
         let mut c = Case::new("Kapsam", court());
-        c.assignment.scope_warnings = birkat_core::scope::scan_for_scope_warnings(
-            "Kaydın montaj olup olmadığı belirlensin.",
-        );
+        c.assignment.scope_warnings =
+            birkat_core::scope::scan_for_scope_warnings("Kaydın montaj olup olmadığı belirlensin.");
         s.save_case(&c).unwrap();
         let d = build_dashboard(&s, 30).unwrap();
         assert!(d

@@ -247,9 +247,8 @@ mod tests {
 
     #[test]
     fn clean_transcription_request_produces_no_warning() {
-        let w = scan_for_scope_warnings(
-            "Kayıt üzerindeki konuşmalar çözümlenerek yazıya geçirilsin.",
-        );
+        let w =
+            scan_for_scope_warnings("Kayıt üzerindeki konuşmalar çözümlenerek yazıya geçirilsin.");
         assert!(w.is_empty());
     }
 

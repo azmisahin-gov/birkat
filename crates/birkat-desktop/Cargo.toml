@@ -20,21 +20,17 @@ birkat-app = { workspace = true }
 birkat-udf = { workspace = true }
 birkat-report = { workspace = true }
 birkat-audio = { workspace = true }
+birkat-backup = { workspace = true }
+birkat-updater = { workspace = true }
 birkat-crypto = { workspace = true }
 eframe = { workspace = true }
 egui = { workspace = true }
-egui_extras = { workspace = true }
-rfd = { workspace = true }
-anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 time = { workspace = true }
 serde_json = { workspace = true }
 birkat-transcription = { workspace = true }
-birkat-backup = { workspace = true }
-birkat-updater = { workspace = true }
 birkat-audit = { workspace = true }
-birkat-evidence = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

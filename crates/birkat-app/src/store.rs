@@ -187,8 +187,7 @@ impl CaseStore {
             kind: "vaka",
             id: id.to_string(),
         })?;
-        serde_json::from_str(&payload)
-            .map_err(|e| CoreError::Data(format!("Vaka çözülemedi: {e}")))
+        serde_json::from_str(&payload).map_err(|e| CoreError::Data(format!("Vaka çözülemedi: {e}")))
     }
 
     /// Tüm vakaları yükler.
@@ -366,7 +365,7 @@ impl CaseStore {
     /// Son güncelleme zamanı en yeni olan vakalar (panel için).
     pub fn recent_cases(&self, limit: usize) -> Result<Vec<Case>> {
         let mut all = self.list_cases()?;
-        all.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
+        all.sort_by_key(|c| std::cmp::Reverse(c.updated_at));
         all.truncate(limit);
         Ok(all)
     }
@@ -378,7 +377,9 @@ impl CaseStore {
             .prepare("SELECT state, COUNT(*) FROM cases GROUP BY state ORDER BY COUNT(*) DESC")
             .map_err(db_err)?;
         let rows = stmt
-            .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)? as u32)))
+            .query_map([], |r| {
+                Ok((r.get::<_, String>(0)?, r.get::<_, i64>(1)? as u32))
+            })
             .map_err(db_err)?;
         let mut out = Vec::new();
         for r in rows {
@@ -441,7 +442,10 @@ mod tests {
         c.workflow.advance().unwrap();
         s.save_case(&c).unwrap();
         let loaded = s.load_case(&c.id).unwrap();
-        assert_eq!(loaded.assignment.file_number.as_deref(), Some("2025/123 Esas"));
+        assert_eq!(
+            loaded.assignment.file_number.as_deref(),
+            Some("2025/123 Esas")
+        );
         assert_eq!(
             loaded.workflow.state,
             birkat_core::workflow::WorkflowState::AssignmentImported

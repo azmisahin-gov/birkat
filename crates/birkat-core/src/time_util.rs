@@ -59,9 +59,7 @@ mod rfc3339 {
     use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
     pub fn serialize<S: Serializer>(value: &OffsetDateTime, s: S) -> Result<S::Ok, S::Error> {
-        let text = value
-            .format(&Rfc3339)
-            .map_err(serde::ser::Error::custom)?;
+        let text = value.format(&Rfc3339).map_err(serde::ser::Error::custom)?;
         s.serialize_str(&text)
     }
 

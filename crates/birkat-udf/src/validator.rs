@@ -108,11 +108,7 @@ pub fn validate_document(doc: &UdfDocument) -> UdfValidation {
 
     // 1. Sayfa yapısı
     let p = &doc.page;
-    if p.left_margin < 0.0
-        || p.right_margin < 0.0
-        || p.top_margin < 0.0
-        || p.bottom_margin < 0.0
-    {
+    if p.left_margin < 0.0 || p.right_margin < 0.0 || p.top_margin < 0.0 || p.bottom_margin < 0.0 {
         checks.push(err(
             "page_margins",
             "Sayfa kenar boşlukları negatif olamaz.",
@@ -138,7 +134,12 @@ pub fn validate_document(doc: &UdfDocument) -> UdfValidation {
 
     // 2. Blokları gez: tablolar ve görseller
     let mut block_count = 0;
-    for block in doc.body.iter().chain(doc.header.iter()).chain(doc.footer.iter()) {
+    for block in doc
+        .body
+        .iter()
+        .chain(doc.header.iter())
+        .chain(doc.footer.iter())
+    {
         block_count += 1;
         check_block(block, &mut checks);
     }
@@ -151,7 +152,10 @@ pub fn validate_document(doc: &UdfDocument) -> UdfValidation {
     let tr = count_turkish_characters(&text);
     checks.push(ok(
         "utf8_text",
-        format!("Metin UTF-8 olarak okundu ({} karakter).", text.chars().count()),
+        format!(
+            "Metin UTF-8 olarak okundu ({} karakter).",
+            text.chars().count()
+        ),
     ));
     if tr > 0 {
         checks.push(ok(
@@ -293,10 +297,7 @@ pub fn validate_udf(bytes: &[u8]) -> UdfValidation {
             a
         }
         Err(e) => {
-            checks.push(err(
-                "zip_integrity",
-                format!("Paket açılamadı: {e}"),
-            ));
+            checks.push(err("zip_integrity", format!("Paket açılamadı: {e}")));
             return finalize(checks, 0, 0, false);
         }
     };
@@ -332,10 +333,7 @@ pub fn validate_udf(bytes: &[u8]) -> UdfValidation {
     }
 
     // 5. Offset tutarlılığı — XML'i yeniden tarayarak en büyük offset'i bul.
-    let xml = match read_raw_content_xml(bytes) {
-        Some(x) => x,
-        None => String::new(),
-    };
+    let xml = read_raw_content_xml(bytes).unwrap_or_default();
     let (max_ref, bad_refs) = scan_offsets(&xml, read.pool.chars().count());
     if bad_refs > 0 {
         checks.push(err(
@@ -520,10 +518,7 @@ mod tests {
         doc.push(UdfBlock::Table(t));
         let v = validate_document(&doc);
         assert!(!v.ok);
-        assert!(v
-            .errors()
-            .iter()
-            .any(|e| e.name == "table_columns"));
+        assert!(v.errors().iter().any(|e| e.name == "table_columns"));
     }
 
     #[test]

@@ -81,12 +81,8 @@ const LINE_HEIGHT_FACTOR: f64 = 1.35;
 
 /// UDF belgesinden yazdırma düzeninde önizleme üretir.
 pub fn build_preview(doc: &UdfDocument) -> UdfPreview {
-    let usable_width = birkat_udf::A4_WIDTH_PT
-        - doc.page.left_margin
-        - doc.page.right_margin;
-    let usable_height = birkat_udf::A4_HEIGHT_PT
-        - doc.page.top_margin
-        - doc.page.bottom_margin;
+    let usable_width = birkat_udf::A4_WIDTH_PT - doc.page.left_margin - doc.page.right_margin;
+    let usable_height = birkat_udf::A4_HEIGHT_PT - doc.page.top_margin - doc.page.bottom_margin;
 
     let mut pages: Vec<PreviewPage> = Vec::new();
     let mut current = PreviewPage {
@@ -97,7 +93,7 @@ pub fn build_preview(doc: &UdfDocument) -> UdfPreview {
     let mut used_height = 0.0f64;
     let mut warnings: Vec<String> = Vec::new();
 
-    let mut new_page = |pages: &mut Vec<PreviewPage>, current: PreviewPage| {
+    let new_page = |pages: &mut Vec<PreviewPage>, current: PreviewPage| {
         pages.push(current);
         PreviewPage {
             number: pages.len() + 1,
@@ -167,7 +163,7 @@ pub fn build_preview(doc: &UdfDocument) -> UdfPreview {
                     let row_text = row
                         .cells
                         .iter()
-                        .map(|c| cell_text(c))
+                        .map(cell_text)
                         .collect::<Vec<_>>()
                         .join(" | ");
                     let h = row.height.max(12.0);
@@ -279,7 +275,10 @@ mod tests {
     fn long_document_spans_multiple_pages() {
         let d = doc_with_paragraphs(200);
         let p = build_preview(&d);
-        assert!(p.page_count() > 1, "uzun belge birden fazla sayfaya yayılmalı");
+        assert!(
+            p.page_count() > 1,
+            "uzun belge birden fazla sayfaya yayılmalı"
+        );
     }
 
     #[test]
@@ -359,7 +358,10 @@ mod tests {
             d.push(UdfBlock::Paragraph(Paragraph::text("kelime ".repeat(120))));
         }
         let p = build_preview(&d);
-        assert!(p.page_count() > 1, "çok uzun belge birden fazla sayfaya yayılmalı");
+        assert!(
+            p.page_count() > 1,
+            "çok uzun belge birden fazla sayfaya yayılmalı"
+        );
     }
 
     #[test]

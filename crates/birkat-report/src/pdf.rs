@@ -81,7 +81,7 @@ pub fn report_to_pdf(report: &ReportDocument) -> Result<Vec<u8>, PdfError> {
 
     let usable_width_pt =
         birkat_udf::A4_WIDTH_PT - report.page_setup.left_margin - report.page_setup.right_margin;
-    let usable_height_pt =
+    let _usable_height_pt =
         birkat_udf::A4_HEIGHT_PT - report.page_setup.top_margin - report.page_setup.bottom_margin;
 
     // Düzen satırlarını üret.
@@ -152,8 +152,18 @@ pub fn report_to_pdf(report: &ReportDocument) -> Result<Vec<u8>, PdfError> {
                     y: Pt((page_h_mm - y) * 72.0 / 25.4),
                 },
             });
+            // Kalın satırlar ve görsel yer tutucuları işaretlenir; printpdf
+            // gömülü tek yazı tipi kullandığından görsel ayrım köşeli
+            // parantezle yapılır.
+            let text = if line.is_image {
+                format!("[{}]", line.text)
+            } else if line.bold {
+                line.text.to_uppercase()
+            } else {
+                line.text.clone()
+            };
             ops.push(Op::ShowText {
-                items: vec![TextItem::Text(line.text.clone())],
+                items: vec![TextItem::Text(text)],
             });
         }
 
@@ -183,14 +193,7 @@ fn layout(report: &ReportDocument, usable_width_pt: f64) -> Vec<LaidOutLine> {
         if section.hidden {
             continue;
         }
-        push_wrapped(
-            &mut lines,
-            &section.title,
-            14.0,
-            true,
-            0,
-            usable_width_pt,
-        );
+        push_wrapped(&mut lines, &section.title, 14.0, true, 0, usable_width_pt);
         for block in &section.blocks {
             match block {
                 Block::Paragraph { text, align } => push_wrapped(
@@ -334,10 +337,7 @@ fn layout(report: &ReportDocument, usable_width_pt: f64) -> Vec<LaidOutLine> {
                     text,
                 } => push_wrapped(
                     &mut lines,
-                    &format!(
-                        "{time_code}  {}: {text}",
-                        speaker.as_deref().unwrap_or("-")
-                    ),
+                    &format!("{time_code}  {}: {text}", speaker.as_deref().unwrap_or("-")),
                     10.0,
                     false,
                     3,
@@ -478,7 +478,9 @@ mod tests {
             r.push_block(
                 birkat_core::report::SectionId::Conclusion,
                 Block::Paragraph {
-                    text: format!("Paragraf {i}: uzun bir metin parçası buraya yazılır ve sarılır."),
+                    text: format!(
+                        "Paragraf {i}: uzun bir metin parçası buraya yazılır ve sarılır."
+                    ),
                     align: birkat_core::report::Align::Justify,
                 },
             );

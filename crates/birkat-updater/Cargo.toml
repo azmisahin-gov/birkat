@@ -8,9 +8,7 @@ description = "BİRKÂT imzalı güncelleme ve geri dönüş"
 
 [dependencies]
 birkat-core = { workspace = true }
-birkat-crypto = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }
 thiserror = { workspace = true }
 sha2 = { workspace = true }
 hex = { workspace = true }
@@ -18,7 +16,6 @@ zip = { workspace = true }
 walkdir = { workspace = true }
 base64 = { workspace = true }
 time = { workspace = true }
-toml = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

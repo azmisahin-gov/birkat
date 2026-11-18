@@ -120,8 +120,8 @@ impl CaseWorkspace {
         if self.case.workflow.state == to {
             return Ok(());
         }
-        let path = birkat_core::workflow::path_to(self.case.workflow.state, to)
-            .ok_or_else(|| {
+        let path =
+            birkat_core::workflow::path_to(self.case.workflow.state, to).ok_or_else(|| {
                 CoreError::InvalidTransition {
                     from: self.case.workflow.state.to_string(),
                     to: to.to_string(),
@@ -141,7 +141,10 @@ impl CaseWorkspace {
     }
 
     /// Sıradaki duruma ilerletir.
-    pub fn advance_next(&mut self, store: &mut CaseStore) -> Result<birkat_core::workflow::WorkflowState> {
+    pub fn advance_next(
+        &mut self,
+        store: &mut CaseStore,
+    ) -> Result<birkat_core::workflow::WorkflowState> {
         let next = self.case.workflow.advance()?;
         self.commit(
             store,

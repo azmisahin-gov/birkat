@@ -336,7 +336,9 @@ mod tests {
 
     #[test]
     fn quality_failure_can_return_to_transcription() {
-        assert!(QualityControl.allowed_transitions().contains(&TranscriptionRunning));
+        assert!(QualityControl
+            .allowed_transitions()
+            .contains(&TranscriptionRunning));
     }
 
     #[test]
@@ -360,7 +362,14 @@ mod tests {
         let p = path_to(New, Inventory).unwrap();
         assert_eq!(
             p,
-            vec![AssignmentImported, AssignmentReview, MaterialsPending, MaterialsReceived, Acquisition, Inventory]
+            vec![
+                AssignmentImported,
+                AssignmentReview,
+                MaterialsPending,
+                MaterialsReceived,
+                Acquisition,
+                Inventory
+            ]
         );
     }
 

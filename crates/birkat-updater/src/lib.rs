@@ -1,7 +1,7 @@
 //! # BİRKÂT imzalı güncelleme ve geri dönüş
 //!
-//! 22. maddede tanımlanan otomatik güncelleme sistemini uygular.
-//! Güncelleme:
+//! Şartnamenin 22. maddesinde tanımlanan otomatik güncelleme sistemini
+//! uygular. Güncelleme şunları içerir:
 //!
 //! * İmzalı manifest.
 //! * Paket bütünlüğü doğrulaması.
@@ -314,7 +314,7 @@ impl Updater {
             error: None,
         };
 
-        let mut step = |record: &mut UpdateRecord, stage: UpdateStage| {
+        let step = |record: &mut UpdateRecord, stage: UpdateStage| {
             record.stage = stage;
             record.log.push((stage, Timestamp::now()));
         };
@@ -603,7 +603,10 @@ mod tests {
             "0.1.0",
             || Ok(()),
         );
-        assert!(!record.success, "imza doğrulanmadan güncelleme uygulanmamalı");
+        assert!(
+            !record.success,
+            "imza doğrulanmadan güncelleme uygulanmamalı"
+        );
         assert_eq!(record.stage, UpdateStage::Failed);
     }
 
@@ -644,13 +647,19 @@ mod tests {
         let u = Updater::new(&app);
 
         let backup = u.pre_backup(&dir.path().join("yedekler")).unwrap();
-        assert_eq!(std::fs::read(app.join("birkat.exe")).unwrap(), b"eski surum");
+        assert_eq!(
+            std::fs::read(app.join("birkat.exe")).unwrap(),
+            b"eski surum"
+        );
 
         u.install(&pkg, &dir.path().join("asamali")).unwrap();
         assert!(app.join("bin/birkat.exe").exists());
 
         u.rollback(&backup).unwrap();
-        assert_eq!(std::fs::read(app.join("birkat.exe")).unwrap(), b"eski surum");
+        assert_eq!(
+            std::fs::read(app.join("birkat.exe")).unwrap(),
+            b"eski surum"
+        );
     }
 
     #[test]

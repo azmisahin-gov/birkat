@@ -1,8 +1,8 @@
 //! # BİRKÂT masaüstü uygulaması (egui/eframe)
 //!
-//! 24. maddede tanımlanan yirmi ana çalışma alanı Türkçe arayüzle sunulur.
-//! Arayüz tamamen Türkçedir; görsel kimlik ciddi, sade, kurumsal ve
-//! meslekidir.
+//! Şartnamenin 24. maddesinde tanımlanan yirmi ana çalışma alanı Türkçe
+//! arayüzle sunulur. Arayüz tamamen Türkçedir; görsel kimlik ciddi, sade,
+//! kurumsal ve meslekidir.
 //!
 //! ## Tasarım ilkeleri
 //!

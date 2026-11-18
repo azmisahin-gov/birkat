@@ -111,14 +111,13 @@ pub fn build_supplementary_report(
     let mut r = ReportDocument::new(case.id.clone(), ReportKind::Supplementary, version);
     r.supersedes = None;
 
-    let mut rows: Vec<Vec<String>> = Vec::new();
-    rows.push(vec![
+    let mut rows: Vec<Vec<String>> = vec![vec![
         "Önceki rapor tarihi".to_string(),
         input
             .previous_report_date
             .map(|d| d.to_rfc3339())
             .unwrap_or_else(|| "(bilinmiyor)".to_string()),
-    ]);
+    ]];
     rows.push(vec![
         "Önceki rapor sürümü".to_string(),
         input
@@ -360,15 +359,12 @@ pub fn build_auxiliary_document(
                 SectionId::Limitations,
                 Block::Notice {
                     title: "Görev kapsamı uyarısı".to_string(),
-                    text: input
-                        .scope_note
-                        .clone()
-                        .unwrap_or_else(|| {
-                            "Görevlendirme metnindeki bazı hususlar 56.12 uzmanlık \
+                    text: input.scope_note.clone().unwrap_or_else(|| {
+                        "Görevlendirme metnindeki bazı hususlar 56.12 uzmanlık \
                              alanı dışında görünmektedir. Bilirkişiliğe esas olacak \
                              açıklamanın bildirilmesi istenmektedir."
-                                .to_string()
-                        }),
+                            .to_string()
+                    }),
                 },
             );
         }
@@ -376,20 +372,16 @@ pub fn build_auxiliary_document(
             r.push_block(
                 SectionId::Limitations,
                 Block::Paragraph {
-                    text: input
-                        .body
-                        .clone()
-                        .unwrap_or_else(|| {
-                            "Aşağıda belirtilen mazeretim nedeniyle görevden \
+                    text: input.body.clone().unwrap_or_else(|| {
+                        "Aşağıda belirtilen mazeretim nedeniyle görevden \
                              çekilme talebim bulunmaktadır."
-                                .to_string()
-                        }),
+                            .to_string()
+                    }),
                     align: Align::Justify,
                 },
             );
         }
-        AuxiliaryDocumentKind::MaterialHandoverForm
-        | AuxiliaryDocumentKind::MaterialReturnForm => {
+        AuxiliaryDocumentKind::MaterialHandoverForm | AuxiliaryDocumentKind::MaterialReturnForm => {
             if let Some(c) = &input.custody {
                 r.push_block(
                     SectionId::MaterialHandoverAndAcquisition,
@@ -404,7 +396,10 @@ pub fn build_auxiliary_document(
                                 "Üretici/model".to_string(),
                                 c.make_model.clone().unwrap_or_default(),
                             ],
-                            vec!["Seri numarası".to_string(), c.serial.clone().unwrap_or_default()],
+                            vec![
+                                "Seri numarası".to_string(),
+                                c.serial.clone().unwrap_or_default(),
+                            ],
                             vec![
                                 "Mühür numarası".to_string(),
                                 c.seal_number.clone().unwrap_or_default(),
@@ -424,8 +419,7 @@ pub fn build_auxiliary_document(
                 );
             }
         }
-        AuxiliaryDocumentKind::EvidenceSchedule
-        | AuxiliaryDocumentKind::ReportAttachmentList => {
+        AuxiliaryDocumentKind::EvidenceSchedule | AuxiliaryDocumentKind::ReportAttachmentList => {
             if !input.attachment_rows.is_empty() {
                 r.push_block(
                     SectionId::AttachmentList,
@@ -447,10 +441,7 @@ pub fn build_auxiliary_document(
             } else {
                 input.checklist_items.clone()
             };
-            r.push_block(
-                SectionId::AttachmentList,
-                Block::BulletList { items },
-            );
+            r.push_block(SectionId::AttachmentList, Block::BulletList { items });
         }
     }
 
@@ -686,10 +677,7 @@ mod tests {
     #[test]
     fn supplementary_report_includes_new_answers() {
         let input = SupplementaryInput {
-            new_answers: vec![(
-                "Yeni soru?".to_string(),
-                "Yeni yanıt.".to_string(),
-            )],
+            new_answers: vec![("Yeni soru?".to_string(), "Yeni yanıt.".to_string())],
             ..Default::default()
         };
         let r = build_supplementary_report(&case(), &[expert()], &input, 2);

@@ -135,8 +135,15 @@ impl PlaybackController {
 
     /// Belirli bir bölümü döngüye alır.
     pub fn loop_section(&mut self, start: f64, end: f64) {
-        let (a, b) = if start <= end { (start, end) } else { (end, start) };
-        self.state.loop_range = Some((a.clamp(0.0, self.state.duration), b.clamp(0.0, self.state.duration)));
+        let (a, b) = if start <= end {
+            (start, end)
+        } else {
+            (end, start)
+        };
+        self.state.loop_range = Some((
+            a.clamp(0.0, self.state.duration),
+            b.clamp(0.0, self.state.duration),
+        ));
         self.state.looping = true;
     }
 

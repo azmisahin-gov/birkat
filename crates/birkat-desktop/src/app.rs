@@ -146,13 +146,20 @@ pub struct BirkatApp {
     /// Bildirimler.
     pub notices: Vec<Notice>,
     /// Profil formu alanları.
+    /// Profil formu: ad soyad.
     pub profile_name: String,
+    /// Profil formu: unvan.
     pub profile_title: String,
+    /// Profil formu: sicil numarası.
     pub profile_registry: String,
     /// Vaka formu alanları.
+    /// Vaka formu: başlık.
     pub case_title: String,
+    /// Vaka formu: görevlendiren merci.
     pub case_court: String,
+    /// Vaka formu: dosya esas numarası.
     pub case_file_number: String,
+    /// Vaka formu: inceleme konusu.
     pub case_subject: String,
     /// Materyal yolu.
     pub material_path: String,
@@ -263,7 +270,10 @@ impl BirkatApp {
         p.registry_number = non_empty(&self.profile_registry);
         match store.save_profile(&p) {
             Ok(()) => {
-                self.notice(Notice::Success(format!("Profil kaydedildi: {}", p.full_name)));
+                self.notice(Notice::Success(format!(
+                    "Profil kaydedildi: {}",
+                    p.full_name
+                )));
                 self.profile_name.clear();
                 self.profile_title.clear();
                 self.profile_registry.clear();
@@ -299,7 +309,10 @@ impl BirkatApp {
         match CaseWorkspace::create(&self.data_root, case, store) {
             Ok(ws) => {
                 self.selected_case = Some(ws.case.id.to_string());
-                self.notice(Notice::Success(format!("Vaka oluşturuldu: {}", ws.case.title)));
+                self.notice(Notice::Success(format!(
+                    "Vaka oluşturuldu: {}",
+                    ws.case.title
+                )));
                 self.workspace = Some(ws);
                 self.screen = Screen::CaseWorkspace;
                 self.case_title.clear();
@@ -345,7 +358,9 @@ impl BirkatApp {
         }
         match ws.unlock_vault(&self.vault_password) {
             Ok(()) => {
-                self.notice(Notice::Success("Kasa açıldı (şifreleme etkin).".to_string()));
+                self.notice(Notice::Success(
+                    "Kasa açıldı (şifreleme etkin).".to_string(),
+                ));
                 self.vault_password.clear();
             }
             Err(e) => self.notice(Notice::Error(format!("Kasa açılamadı: {e}"))),
@@ -416,7 +431,8 @@ impl BirkatApp {
             birkat_core::report::ReportKind::Main,
             1,
         );
-        let udf = birkat_report::report_to_udf(&report, &birkat_report::ReportToUdfOptions::default());
+        let udf =
+            birkat_report::report_to_udf(&report, &birkat_report::ReportToUdfOptions::default());
         let udf_bytes = match birkat_udf::write_udf_to_bytes(udf) {
             Ok(b) => b,
             Err(e) => {
@@ -595,15 +611,17 @@ impl BirkatApp {
         use egui::{Key, Modifiers};
         let (ctrl_s, ctrl_d, ctrl_r, ctrl_b, f5) = ctx.input(|i| {
             (
-                i.key_pressed(Key::S) && i.modifiers.matches(Modifiers::COMMAND),
-                i.key_pressed(Key::D) && i.modifiers.matches(Modifiers::COMMAND),
-                i.key_pressed(Key::R) && i.modifiers.matches(Modifiers::COMMAND),
-                i.key_pressed(Key::B) && i.modifiers.matches(Modifiers::COMMAND),
+                i.key_pressed(Key::S) && i.modifiers.matches_logically(Modifiers::COMMAND),
+                i.key_pressed(Key::D) && i.modifiers.matches_logically(Modifiers::COMMAND),
+                i.key_pressed(Key::R) && i.modifiers.matches_logically(Modifiers::COMMAND),
+                i.key_pressed(Key::B) && i.modifiers.matches_logically(Modifiers::COMMAND),
                 i.key_pressed(Key::F5),
             )
         });
         if ctrl_s {
-            self.notice(Notice::Info("Otomatik kaydetme: tüm değişiklikler kayıtlı.".to_string()));
+            self.notice(Notice::Info(
+                "Otomatik kaydetme: tüm değişiklikler kayıtlı.".to_string(),
+            ));
         }
         if ctrl_d {
             self.screen = Screen::Dashboard;
@@ -679,10 +697,7 @@ impl eframe::App for BirkatApp {
                 ui.separator();
                 egui::ScrollArea::vertical().show(ui, |ui| {
                     for s in Screen::menu() {
-                        if ui
-                            .selectable_label(self.screen == s, s.title())
-                            .clicked()
-                        {
+                        if ui.selectable_label(self.screen == s, s.title()).clicked() {
                             self.screen = s;
                         }
                     }
@@ -752,10 +767,7 @@ mod tests {
         let mut a = app();
         a.profile_name = "".to_string();
         a.add_profile();
-        assert!(a
-            .notices
-            .iter()
-            .any(|n| matches!(n, Notice::Warning(_))));
+        assert!(a.notices.iter().any(|n| matches!(n, Notice::Warning(_))));
     }
 
     #[test]

@@ -163,9 +163,7 @@ impl SectionId {
             SectionId::Subject => "İnceleme konusu",
             SectionId::Questions => "Bilirkişiye yöneltilen sorular",
             SectionId::MaterialsExamined => "İncelenen materyaller",
-            SectionId::MaterialHandoverAndAcquisition => {
-                "Materyal teslim ve edinim bilgileri"
-            }
+            SectionId::MaterialHandoverAndAcquisition => "Materyal teslim ve edinim bilgileri",
             SectionId::EvidenceList => "Delil listesi",
             SectionId::HashAndIntegrity => "Dosya hash ve bütünlük kayıtları",
             SectionId::Method => "İnceleme yöntemi",

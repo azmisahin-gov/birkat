@@ -101,14 +101,11 @@ impl AppSettings {
             warnings.push("Arayüz ölçeği en fazla 3.0 olabilir.".to_string());
         }
         if self.auto_lock_minutes == 0 {
-            warnings.push(
-                "Otomatik kilitleme kapalı; güvenlik için açılması önerilir.".to_string(),
-            );
+            warnings
+                .push("Otomatik kilitleme kapalı; güvenlik için açılması önerilir.".to_string());
         }
         if !self.auto_backup {
-            warnings.push(
-                "Otomatik yedekleme kapalı; vaka kaybı riski vardır.".to_string(),
-            );
+            warnings.push("Otomatik yedekleme kapalı; vaka kaybı riski vardır.".to_string());
         }
         warnings
     }
@@ -159,11 +156,17 @@ impl SystemHealth {
 
     /// Uyarı ekler ve genel durumu günceller.
     pub fn recompute(&mut self) {
-        self.overall_ok = self.database_ok
-            && self.vault_ok
-            && self.model_ok
-            && self.warnings.is_empty();
+        self.overall_ok =
+            self.database_ok && self.vault_ok && self.model_ok && self.warnings.is_empty();
     }
+}
+
+/// GPU desteğinin bu derlemede etkin olup olmadığını bildirir.
+///
+/// Derleme zamanında `BIRKAT_GPU` ortam değişkeni ile işaretlenir; aksi hâlde
+/// yalnızca CPU kullanılır.
+pub fn gpu_support_compiled() -> bool {
+    option_env!("BIRKAT_GPU").is_some()
 }
 
 /// Sistem sağlığını denetler.
@@ -199,15 +202,12 @@ pub fn check_health(
     let model_ok = match model_path {
         Some(p) if p.exists() => true,
         Some(_) => {
-            warnings.push(
-                "Model paketi bulunamadı; transkripsiyon çalışmayacaktır.".to_string(),
-            );
+            warnings.push("Model paketi bulunamadı; transkripsiyon çalışmayacaktır.".to_string());
             false
         }
         None => {
-            warnings.push(
-                "Model paketi yolu ayarlanmadı; transkripsiyon için gereklidir.".to_string(),
-            );
+            warnings
+                .push("Model paketi yolu ayarlanmadı; transkripsiyon için gereklidir.".to_string());
             false
         }
     };
@@ -231,7 +231,7 @@ pub fn check_health(
         .map(|n| n.get())
         .unwrap_or(1);
 
-    let gpu_support_compiled = cfg!(feature = "cuda") || cfg!(feature = "metal");
+    let gpu_support_compiled = gpu_support_compiled();
 
     let mut health = SystemHealth {
         database_ok,
@@ -297,11 +297,7 @@ mod tests {
     #[test]
     fn health_check_reports_missing_model() {
         let dir = tempfile::tempdir().unwrap();
-        let h = check_health(
-            dir.path(),
-            None,
-            Some(&dir.path().join("yedekler")),
-        );
+        let h = check_health(dir.path(), None, Some(&dir.path().join("yedekler")));
         assert!(!h.model_ok);
         assert!(!h.overall_ok);
         assert!(h.warnings.iter().any(|w| w.contains("Model")));
@@ -313,11 +309,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let model = dir.path().join("model");
         std::fs::create_dir_all(&model).unwrap();
-        let h = check_health(
-            dir.path(),
-            Some(&model),
-            Some(&dir.path().join("yedekler")),
-        );
+        let h = check_health(dir.path(), Some(&model), Some(&dir.path().join("yedekler")));
         assert!(h.database_ok);
         assert!(h.vault_ok);
         assert!(h.model_ok);

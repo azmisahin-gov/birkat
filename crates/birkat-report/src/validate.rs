@@ -84,11 +84,20 @@ pub fn required_fields() -> Vec<(&'static str, SectionId)> {
         ("Görevlendirmeyi yapan merci", SectionId::AssigningAuthority),
         ("Dosya numarası", SectionId::FileNumber),
         ("Yargılamanın tarafları", SectionId::Parties),
-        ("Görevlendirme tarihi ve süresi", SectionId::AssignmentDateAndDuration),
+        (
+            "Görevlendirme tarihi ve süresi",
+            SectionId::AssignmentDateAndDuration,
+        ),
         ("İncelemenin konusu", SectionId::Subject),
-        ("İncelenmesi istenen maddi unsurlar", SectionId::MaterialsExamined),
+        (
+            "İncelenmesi istenen maddi unsurlar",
+            SectionId::MaterialsExamined,
+        ),
         ("İnceleme yöntemi", SectionId::Method),
-        ("Kullanılan transkripsiyon modeli ve parametreleri", SectionId::TranscriptionModel),
+        (
+            "Kullanılan transkripsiyon modeli ve parametreleri",
+            SectionId::TranscriptionModel,
+        ),
         ("Bilimsel ve teknik dayanaklar", SectionId::AnswerReferences),
         ("Gerekçeli sonuç", SectionId::Conclusion),
         ("Rapor tarihi", SectionId::ReportDate),
@@ -264,15 +273,12 @@ mod tests {
         r.section_mut(SectionId::Conclusion).unwrap().hidden = true;
         let rev = final_review(&r, None);
         assert!(!rev.ready);
-        assert!(rev
-            .errors()
-            .iter()
-            .any(|e| e.message.contains("gizlenmiş")));
+        assert!(rev.errors().iter().any(|e| e.message.contains("gizlenmiş")));
     }
 
     #[test]
     fn unanswered_question_is_an_error() {
-        let mut r = signed_off_report();
+        let r = signed_off_report();
         let mut c = Case::new("Test", court());
         c.assignment.questions.push(AssignmentQuestion {
             id: QuestionId::new(),
@@ -323,7 +329,7 @@ mod tests {
 
     #[test]
     fn panel_without_dissenting_opinion_warns() {
-        let mut r = signed_off_report();
+        let r = signed_off_report();
         let mut c = Case::new("Heyet", court());
         c.panel_members
             .push(birkat_core::ids::ExpertProfileId::new());

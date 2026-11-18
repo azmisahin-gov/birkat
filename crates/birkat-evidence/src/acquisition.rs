@@ -19,8 +19,8 @@
 
 use crate::hash::{hash_file, verify_identical};
 use crate::manifest::{AcquisitionManifest, ManifestEntry};
-use birkat_core::evidence::{AcquisitionMethod, HashAlgorithm};
 use birkat_core::error::{CoreError, Result};
+use birkat_core::evidence::{AcquisitionMethod, HashAlgorithm};
 use birkat_core::time_util::Timestamp;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -34,7 +34,7 @@ pub struct AcquisitionOptions {
     pub no_overwrite: bool,
     /// Edinim sonrası hedef kopyayı okuyup hash doğrula.
     pub verify_after_copy: bool,
-    /// Zaman bilgilerini kopyala (filetime).
+    /// Zaman bilgilerini kopyala (mtime + atime).
     pub preserve_timestamps: bool,
     /// Azami dosya boyutu (bayt); aşılırsa atlanır ve raporlanır.
     pub max_file_bytes: Option<u64>,
@@ -257,9 +257,17 @@ fn acquire_one_file(src: &Path, dst: &Path, options: &AcquisitionOptions) -> Res
 
     // Zaman bilgilerini koru.
     if options.preserve_timestamps {
-        let mtime = filetime::FileTime::from_last_modification_time(&meta);
-        let atime = filetime::FileTime::from_last_access_time(&meta);
-        let _ = filetime::set_file_times(dst, atime, mtime);
+        // Dosya sistemi zamanlarını koru (mtime + atime).
+        let mut times = std::fs::FileTimes::new();
+        if let Ok(m) = meta.modified() {
+            times = times.set_modified(m);
+        }
+        if let Ok(a) = meta.accessed() {
+            times = times.set_accessed(a);
+        }
+        if let Ok(f) = std::fs::OpenOptions::new().write(true).open(dst) {
+            let _ = f.set_times(times);
+        }
     }
 
     // Hedef kopyayı tekrar oku ve doğrula.

@@ -64,7 +64,10 @@ impl Default for Conventions {
 impl Conventions {
     /// Belirsiz bir ifade için işaret metni üretir.
     pub fn uncertain(&self, best_guess: &str) -> String {
-        format!("{}{best_guess}{}", self.uncertain_prefix, self.uncertain_suffix)
+        format!(
+            "{}{best_guess}{}",
+            self.uncertain_prefix, self.uncertain_suffix
+        )
     }
 
     /// Birebir transkriptin korunması gereken özelliklerini açıklar.
@@ -75,11 +78,31 @@ impl Conventions {
              dilbilgisine göre kendiliğinden yeniden yazılmamıştır. Modelin \
              kendiliğinden kaldırdığı tekrar veya dolgu ifadeleri varsa ses \
              üzerinden kontrol edilebilir.",
-            if self.keep_fillers { "" } else { "korunmamıştır (" },
-            if self.keep_fillers { "korunmuştur" } else { "ayar kapalı)" },
-            if self.keep_repetitions { "" } else { "korunmamıştır (" },
-            if self.keep_repetitions { "korunmuştur" } else { "ayar kapalı)" },
-            if self.keep_incomplete_sentences { "" } else { "korunmamıştır (" },
+            if self.keep_fillers {
+                ""
+            } else {
+                "korunmamıştır ("
+            },
+            if self.keep_fillers {
+                "korunmuştur"
+            } else {
+                "ayar kapalı)"
+            },
+            if self.keep_repetitions {
+                ""
+            } else {
+                "korunmamıştır ("
+            },
+            if self.keep_repetitions {
+                "korunmuştur"
+            } else {
+                "ayar kapalı)"
+            },
+            if self.keep_incomplete_sentences {
+                ""
+            } else {
+                "korunmamıştır ("
+            },
             if self.keep_incomplete_sentences {
                 "korunmuştur"
             } else {

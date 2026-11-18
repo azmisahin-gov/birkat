@@ -134,10 +134,7 @@ pub fn detect_text_density(
 /// Ardışık tekrarları bulur.
 ///
 /// Aynı metin `min_repeats` kez üst üste geliyorsa işaretlenir.
-pub fn detect_repetitions(
-    texts: &[String],
-    min_repeats: usize,
-) -> Vec<HallucinationFlag> {
+pub fn detect_repetitions(texts: &[String], min_repeats: usize) -> Vec<HallucinationFlag> {
     let mut out = Vec::new();
     let mut i = 0usize;
     while i < texts.len() {
@@ -178,7 +175,8 @@ pub fn scan(
         if let Some(f) = detect_known_pattern(*idx, text) {
             flags.push(f);
         }
-        if let Some(f) = detect_text_density(*idx, text, (end - start).max(0.0), max_words_per_sec) {
+        if let Some(f) = detect_text_density(*idx, text, (end - start).max(0.0), max_words_per_sec)
+        {
             flags.push(f);
         }
     }
@@ -233,7 +231,9 @@ mod tests {
         ];
         let flags = detect_repetitions(&texts, 3);
         assert_eq!(flags.len(), 3);
-        assert!(flags.iter().all(|f| f.reason == HallucinationReason::RepeatedText));
+        assert!(flags
+            .iter()
+            .all(|f| f.reason == HallucinationReason::RepeatedText));
     }
 
     #[test]
@@ -255,7 +255,11 @@ mod tests {
             (1usize, "normal".to_string(), 1.0, 3.0, Some(-20.0)),
         ];
         let flags = scan(&segs, -60.0, 8.0, 3);
-        assert!(flags.iter().any(|f| f.reason == HallucinationReason::TextInSilence));
-        assert!(flags.iter().any(|f| f.reason == HallucinationReason::KnownPattern));
+        assert!(flags
+            .iter()
+            .any(|f| f.reason == HallucinationReason::TextInSilence));
+        assert!(flags
+            .iter()
+            .any(|f| f.reason == HallucinationReason::KnownPattern));
     }
 }

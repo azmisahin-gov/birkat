@@ -114,27 +114,21 @@ pub fn assess_device(device: &PhysicalDevice) -> DeviceAssessment {
     let mut blockers = Vec::new();
 
     if device.is_system_disk {
-        blockers.push(
-            "Sistem diski edinim kaynağı olarak kullanılamaz.".to_string(),
-        );
+        blockers.push("Sistem diski edinim kaynağı olarak kullanılamaz.".to_string());
     }
     if device.capacity_bytes.is_none() {
-        warnings.push(
-            "Kapasite bilgisi işletim sistemi tarafından sunulmadı.".to_string(),
-        );
+        warnings.push("Kapasite bilgisi işletim sistemi tarafından sunulmadı.".to_string());
     }
     if device.serial.is_none() {
-        warnings.push(
-            "Seri numarası sunulmadı; aygıt kimliği sınırlı kesinliktedir.".to_string(),
-        );
+        warnings.push("Seri numarası sunulmadı; aygıt kimliği sınırlı kesinliktedir.".to_string());
     }
     match &device.write_protection {
         WriteProtectionState::Unverified(r) => warnings.push(format!(
             "Yazma koruması durumu doğrulanamadı: {r}. Bu durum 'korumalı' olarak sunulmaz."
         )),
-        WriteProtectionState::None => warnings.push(
-            "Donanımsal veya yazılımsal yazma koruması algılanmadı.".to_string(),
-        ),
+        WriteProtectionState::None => {
+            warnings.push("Donanımsal veya yazılımsal yazma koruması algılanmadı.".to_string())
+        }
         s if s.is_protected() => {}
         _ => {}
     }
@@ -300,6 +294,9 @@ mod tests {
     fn connection_labels_are_turkish() {
         assert_eq!(connection_label(ConnectionKind::Usb), "USB");
         assert_eq!(connection_label(ConnectionKind::SdCard), "SD/microSD kart");
-        assert_eq!(connection_label(ConnectionKind::Optical), "Optik sürücü (CD/DVD)");
+        assert_eq!(
+            connection_label(ConnectionKind::Optical),
+            "Optik sürücü (CD/DVD)"
+        );
     }
 }
