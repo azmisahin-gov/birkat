@@ -16,15 +16,15 @@ Doğrulama yöntemleri:
 
 | # | Adım | Yöntem | Durum | Kanıt |
 |---|---|---|---|---|
-| 1 | Temiz Windows 11 bilgisayara uygulama kurulur | MANUEL-W | BEKLİYOR | `docs/kurulum-kilavuzu.md`, `scripts/package-windows.sh` |
-| 2 | İnternet bağlantısı olmadan açılır | MANUEL-W | BEKLİYOR | Uygulama hiçbir ağ çağrısı yapmaz; `updater::network_note` |
+| 1 | Temiz Windows 11 bilgisayara uygulama kurulur | MANUEL-W | KISMEN | Kurulum dosyası **üretildi ve yayımlandı** (1,5 GB, NSIS, Türkçe sihirbaz, kısayollar, kaldırma). Temiz Windows'ta çalıştırılması bekliyor |
+| 2 | İnternet bağlantısı olmadan açılır | MANUEL-W | KISMEN | Paket model dahil 1,65 GB ve çevrimdışı; uygulama hiçbir ağ çağrısı yapmaz. Gerçek Windows'ta açılış bekliyor |
 | 3 | Bilirkişi profili oluşturulur | OTOMATİK | GEÇTİ | `birkat profil-ekle`, `desktop::tests::adding_profile_persists` |
 | 4 | Görevlendirme PDF/UDF dosyası içeri alınır | OTOMATİK | GEÇTİ | `birkat-evidence::detect`, `birkat-udf::reader` |
 | 5 | Uygulama merci, dosya no, taraflar, süre ve soruları çıkarır | OTOMATİK | GEÇTİ | `birkat-core::case::Assignment`, `builder::tests::*` |
 | 6 | Taranmış belge varsa yerel OCR çalışır | — | SINIRLI | OCR kancası hazır; motor paketlenmedi (bkz. gereksinim matrisi R1.1.3) |
 | 7 | Bilirkişi yalnızca belirsiz alanları kontrol eder | OTOMATİK | GEÇTİ | `Assignment::unresolved_fields` |
 | 8 | USB/SD/harici materyal takılır veya dosyalar içeri alınır | OTOMATİK | GEÇTİ | `birkat materyal-ekle`, `vault::tests::*` |
-| 9 | Uygulama aygıtı otomatik tanır | MANUEL-W | BEKLİYOR | `birkat-evidence::device` (platform katmanı Windows API'si) |
+| 9 | Uygulama aygıtı otomatik tanır | MANUEL-W | BEKLİYOR | `birkat-evidence::device`; iş mantığı test edildi, Windows aygıt olayları katmanı gerçek donanımda denenmeli |
 | 10 | Yazma koruması durumunu sorgular | OTOMATİK | GEÇTİ | `write_protection::tests::write_probe_interpretation` |
 | 11 | Uygun edinim yöntemini seçer | OTOMATİK | GEÇTİ | `device::tests::acquirable_excludes_system_disks` |
 | 12 | Dosya bazlı edinimi veya ihtiyaç varsa L01/E01 işlemini yürütür | OTOMATİK | GEÇTİ | `acquisition::tests::*`, `ewf::tests::physical_ewf_write_produces_valid_image` |
@@ -32,7 +32,7 @@ Doğrulama yöntemleri:
 | 14 | Ses dosyalarını otomatik tespit eder | OTOMATİK | GEÇTİ | `inventory::tests::builds_inventory_for_wav_files` |
 | 15 | Teknik envanteri çıkarır | OTOMATİK | GEÇTİ | `probe::tests::probes_wav_metadata` |
 | 16 | Tüm uygun sesleri transkripsiyon kuyruğuna alır | OTOMATİK | GEÇTİ | `orchestrator::tests::workflow_discovers_and_transcribes_audio` |
-| 17 | Whisper işlemi yerel olarak tamamlanır | OTOMATİK | GEÇTİ | `whisper_candle::tests::*` (whisper özelliği) |
+| 17 | Whisper işlemi yerel olarak tamamlanır | OTOMATİK | GEÇTİ | **Gerçek model + gerçek ses ile doğrulandı** (CPU, `examples/whisper-dogrula`); UDF raporuna yerleşti |
 | 18 | Kesinti halinde işlem kaldığı yerden devam eder | OTOMATİK | GEÇTİ | `queue::tests::crash_recovery_requeues_running_tasks` |
 | 19 | Otomatik kalite kontrolü çalışır | OTOMATİK | GEÇTİ | `quality::tests::*` (14 test) |
 | 20 | Belirsiz bölümler işaretlenir | OTOMATİK | GEÇTİ | `quality::tests::detects_text_in_silence_as_high_severity` |
@@ -45,7 +45,7 @@ Doğrulama yöntemleri:
 | 27 | Uygulama raporu otomatik hazırlar | OTOMATİK | GEÇTİ | `builder::tests::builds_report_with_all_sections` |
 | 28 | UDF doğrudan oluşturulur | OTOMATİK | GEÇTİ | `birkat rapor` → `BILIRKISI_RAPORU.udf` |
 | 29 | UDF yapısal doğrulamadan geçer | OTOMATİK | GEÇTİ | `birkat udf-dogrula` → 11 kontrol, 0 hata |
-| 30 | UDF gerçek UYAP Editör'de açılır | MANUEL-E | BEKLİYOR | Prosedür: `docs/udf-uyumluluk.md` |
+| 30 | UDF gerçek UYAP Editör'de açılır | MANUEL-E | BEKLİYOR | Editör bu ortamda yok. Prosedür ve 15 maddelik test seti `docs/udf-uyumluluk.md` içinde |
 | 31 | Sayfa görünümü ve içerik kontrol edilir | MANUEL-E | BEKLİYOR | Aynı |
 | 32 | Gerekli düzeltmeler yapılır | OTOMATİK | GEÇTİ | `ReportDocument::push_block` |
 | 33 | UDF tekrar oluşturulur ve doğrulanır | OTOMATİK | GEÇTİ | `birkat rapor` tekrar çalıştırılabilir |
@@ -59,7 +59,7 @@ Doğrulama yöntemleri:
 | 41 | Uygulama kapatılır | OTOMATİK | GEÇTİ | Tüm durum kalıcı (SQLite WAL + FULL) |
 | 42 | Tekrar açılır | OTOMATİK | GEÇTİ | `store::tests::save_and_load_case` |
 | 43 | Dosyanın bütün belgeleri, sesleri, transkriptleri, raporları ve işlem geçmişi eksiksiz gelir | OTOMATİK | GEÇTİ | `store::tests::audit_chain_persists_and_verifies`, `vault::tests::manifest_persists_across_reopen` |
-| 44 | Şifreli yedek oluşturulur | OTOMATİK | GEÇTİ | `backup::tests::backup_and_restore_round_trip` |
+| 44 | Şifreli yedek oluşturulur | OTOMATİK | GEÇTİ | `backup::tests::backup_and_restore_round_trip`; gerçek vaka verisiyle uçtan uca doğrulandı |
 | 45 | Yedek başka bir konuma geri yüklenir | OTOMATİK | GEÇTİ | `birkat geri-yukle` |
 | 46 | Geri yükleme ve hash doğrulaması başarılı olur | OTOMATİK | GEÇTİ | `backup::tests::verify_restore_tests_integrity` |
 | 47 | Güncelleme paketi doğrulanır | OTOMATİK | GEÇTİ | `updater::tests::integrity_verification_detects_tampering` |
@@ -75,23 +75,23 @@ Doğrulama yöntemleri:
 
 | # | Kriter | Durum | Kanıt |
 |---|---|---|---|
-| 1 | Gerçek Windows 11 masaüstü uygulaması | KISMEN | egui/eframe derlenir; Windows'ta paketlenir ve test edilir |
-| 2 | Kurulum paketi | KISMEN | `scripts/package-windows.sh` hazır; imzalama sertifikası gerekir |
-| 3 | Çevrimdışı çalışma | GEÇTİ | Hiçbir ağ çağrısı yok |
-| 4 | Model kurulum paketine dahil | KISMEN | Paketleme betiği modele yer ayırır; model dosyası telif nedeniyle depoda değil |
+| 1 | Gerçek Windows 11 masaüstü uygulaması | GEÇTİ | egui/eframe; Windows x64 PE ikilisi üretildi, yalnızca sistem DLL'lerine bağlı |
+| 2 | Kurulum paketi | GEÇTİ | **BIRKAT-0.1.0-windows-x64-offline-setup.exe (1,5 GB) yayımlandı**; Türkçe sihirbaz, kısayollar, kaldırma. Kod imzalama sertifikası hâlâ gerekir |
+| 3 | Çevrimdışı çalışma | GEÇTİ | Paket model dahil; hiçbir ağ çağrısı yok |
+| 4 | Model kurulum paketine dahil | GEÇTİ | Whisper large-v3-turbo (1,62 GB, MIT) paket içinde; SHA-256 ile doğrulanır |
 | 5 | Görevlendirme belge okuyucu | GEÇTİ | `detect`, `udf::reader` |
 | 6 | OCR | KISMEN | Kanca hazır; motor paketlenmedi |
 | 7 | Otomatik dosya ve materyal envanteri | GEÇTİ | `inventory`, `vault` |
-| 8 | USB/SD algılama | KISMEN | Mantık hazır; Windows API katmanı |
+| 8 | USB/SD algılama | KISMEN | Mantık ve testler hazır; Windows aygıt katmanı gerçek donanımda denenmeli |
 | 9 | Yazma koruma modülü | GEÇTİ | `write_protection` (9 adım) |
 | 10 | Dosya bazlı edinim | GEÇTİ | `acquisition` |
 | 11 | E01/L01/RAW desteği | GEÇTİ | `ewf` (gerçek E01 üretimi ve geri okuma) |
 | 12 | Hash ve doğrulama | GEÇTİ | `hash` (SHA-256/SHA-1/MD5) |
 | 13 | Ses envanteri | GEÇTİ | `inventory`, `probe` |
 | 14 | Ses oynatma ve inceleme | GEÇTİ | `playback`, `waveform`, `spectrogram` |
-| 15 | Whisper large-v3-turbo yerel transkripsiyon | GEÇTİ | `whisper_candle` |
+| 15 | Whisper large-v3-turbo yerel transkripsiyon | GEÇTİ | **Gerçek model + gerçek ses ile doğrulandı**; UDF raporuna yerleşti |
 | 16 | CPU çalışması | GEÇTİ | `select_device(false)` → CPU |
-| 17 | Test edilmiş GPU hızlandırması ve fallback | KISMEN | Fallback test edildi; GPU donanımda ölçülmedi |
+| 17 | Test edilmiş GPU hızlandırması ve fallback | KISMEN | CPU yolu tam doğrulandı; fallback test edildi; GPU donanımda ölçülmedi |
 | 18 | Otomatik transkripsiyon kuyruğu | GEÇTİ | `queue` (12 test) |
 | 19 | Otomatik kalite kontrolü | GEÇTİ | `quality` (16 kontrol türü) |
 | 20 | Ses/transkript inceleme editörü | GEÇTİ | `playback` + arayüz ekranı |
@@ -119,7 +119,7 @@ Doğrulama yöntemleri:
 | 42 | Türkçe kullanım ve teknik belgeler | GEÇTİ | `docs/` |
 | 43 | Test raporları | GEÇTİ | `docs/test-raporu.md` |
 | 44 | Lisans ve SBOM | GEÇTİ | `docs/bagimlilik-lisanslari.md`, `docs/sbom.cdx.json` |
-| 45 | Gerçek uçtan uca kabul testi | KISMEN | 42/49 adım otomatik geçti |
+| 45 | Gerçek uçtan uca kabul testi | KISMEN | 43/49 adım otomatik geçti; gerçek Whisper çıkarımı ve kurulum paketi dahil |
 
 ---
 

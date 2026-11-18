@@ -19,12 +19,28 @@ platformu Windows 11'dir.
 
 ## 2. Kurulum paketi
 
-Kurulum paketi `BIRKAT-0.1.0-win64.exe` tek dosyadır. İçeriği:
+**İndirme:** <https://github.com/azmisahin-gov/birkat/releases/latest>
+
+| Dosya | Boyut | SHA-256 (ilk 16) |
+|---|---|---|
+| `BIRKAT-0.1.0-windows-x64-offline-setup.exe` | 1.505.558.800 bayt | `8cdbf9de1a5bc0a3…` |
+| `BIRKAT-0.1.0-windows-x64-offline.zip` | 1.505.468.161 bayt | `7b49648de8f60cc9…` |
+
+Tam hash'ler `SHA256SUMS.txt` içindedir. Doğrulama:
+
+```bash
+sha256sum -c SHA256SUMS.txt
+```
+
+Paket **internet bağlantısı gerektirmez**; Whisper modeli içindedir.
+
+Kurulum dosyası tek bir NSIS yürütülebilir dosyasıdır. İçeriği:
 
 ```text
-BIRKAT-0.1.0-win64.exe
-├── birkat-desktop.exe       Masaüstü uygulaması
-├── birkat.exe               Komut satırı aracı
+BIRKAT-0.1.0-windows-x64-offline-setup.exe (içerik)
+├── BIRKAT.exe               Masaüstü uygulaması
+├── birkat-cli.exe           Komut satırı aracı
+├── KURULUM.txt              Kurulum ve ilk açılış notları
 ├── models/                  Whisper large-v3-turbo model paketi
 │   ├── model.safetensors
 │   ├── config.json
@@ -36,6 +52,10 @@ BIRKAT-0.1.0-win64.exe
 └── manifest.json            Paket hash manifesti
 ```
 
+Paket 39 dosya ve 1,65 GB'tır. Üretilen `.exe` yalnızca Windows sistem
+DLL'lerine bağlıdır; **libgcc, libwinpthread veya libstdc bağımlılığı yoktur.**
+Kullanıcı hiçbir çalışma zamanı kurmak zorunda değildir.
+
 Kurulum sırasında:
 
 1. Yönetici yetkisi istenir (Program Files'a kurulum için).
@@ -46,14 +66,22 @@ Kurulum sırasında:
 
 ## 3. İlk çalıştırma
 
-1. Uygulamayı açın. İlk açılışta geliştirici aracı, Cargo, Rust veya internet
-   **istenmez.**
-2. **Bilirkişi profili** oluşturun: ad soyad, unvan, sicil numarası, iletişim.
-3. **Veri kök dizinini** seçin (varsayılan: `C:\Users\<kullanıcı>\BIRKAT`).
-4. **Yedek dizinini** seçin (önerilir: farklı bir disk veya ağ konumu).
-5. **Kasa parolasını** belirleyin (en az 12 karakter, harf + rakam).
-   Bu parola hiçbir yere kaydedilmez; kaybedilirse kurtarma anahtarı gerekir.
-6. **Kurtarma anahtarını** güvenli bir yere yazın (yazdırın ve kasada saklayın).
+Uygulama ilk açıldığında **Türkçe bir kurulum sihirbazı** gösterilir.
+Sihirbaz yalnızca mesleki bilgileri ve güvenlik tercihini sorar; model,
+codec, GPU, Python, FFmpeg veya dosya yolu gibi teknik ayrıntılar
+**sorulmaz.**
+
+1. **Hoş geldiniz** — ürün tanıtımı ve ne sorulmadığı.
+2. **Bilirkişi profili** — ad soyad, unvan, sicil numarası, kurum, iletişim.
+   Bu bilgiler her raporda otomatik kullanılır.
+3. **Veri ve yedek klasörü** — veri kök dizini ve yedek dizini.
+4. **Kasa parolası** — en az 12 karakter (harf + rakam). Parola gücü anında
+   gösterilir. Ardından **kurtarma anahtarı** üretilir; kaydettiğinizi
+   onaylamadan ilerleyemezsiniz.
+5. **Sistem denetimi** — veritabanı, kasa, Whisper modeli ve derleme desteği
+   otomatik denetlenir. Eksik model açıkça bildirilir.
+
+Sihirbaz tamamlandığında uygulama ana kontrol panelini açar.
 
 ## 4. Model paketi
 
