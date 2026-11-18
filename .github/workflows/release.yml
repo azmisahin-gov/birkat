@@ -65,17 +65,15 @@ jobs:
       - name: Model paketini indir
         id: model
         env:
-          MODEL_URL: ${{ inputs.model_url || vars.MODEL_URL }}
+          # Öncelik sırası:
+          #   1. Elle çalıştırmada verilen `model_url` girdisi
+          #   2. Depo değişkeni MODEL_URL (yeni model sürümleri için önerilir)
+          #   3. Bu depoda yayımlanmış varsayılan model paketi
+          MODEL_URL: ${{ inputs.model_url || vars.MODEL_URL || 'https://github.com/azmisahin-gov/birkat/releases/download/v0.1.0/whisper-large-v3-turbo.tar.gz' }}
         run: |
           set -euo pipefail
-          if [ -z "${MODEL_URL:-}" ]; then
-            echo "::error::MODEL_URL tanımlı değil. Depo değişkeni olarak ayarlayın:"
-            echo "::error::Settings → Secrets and variables → Actions → Variables → MODEL_URL"
-            echo "::error::Model olmadan çevrimdışı kurulum paketi ÜRETİLMEZ."
-            exit 1
-          fi
           mkdir -p /tmp/model
-          echo "Model indiriliyor..."
+          echo "Model indiriliyor: $MODEL_URL"
           curl -sSL --retry 3 --max-time 1800 -o /tmp/model.tar.gz "$MODEL_URL"
           tar -xzf /tmp/model.tar.gz -C /tmp/model
           # Arşiv tek bir alt klasör içeriyorsa düzleştir.
