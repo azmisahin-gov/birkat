@@ -11,7 +11,7 @@ Bu belge, BİRKÂT'ın test sonuçlarını ve test stratejisini belgeler
 | Metrik | Değer |
 |---|---|
 | Paket sayısı | 13 |
-| Varsayılan test sayısı | **490** |
+| Varsayılan test sayısı | **495** |
 | Whisper özelliği ile ek testler | +62 |
 | Başarısız test | **0** |
 | Atlanan (ignored) test | 0 |
@@ -26,13 +26,13 @@ Bu belge, BİRKÂT'ın test sonuçlarını ve test stratejisini belgeler
 | `birkat-udf` | 52 | 0 | Yazıcı, okuyucu, doğrulayıcı, Türkçe karakter, ofset, tablo, görsel |
 | `birkat-evidence` | 69 | 0 | Hash, tür tespiti, arşiv güvenliği, edinim, aygıt, yazma koruması, **gerçek E01/Ex01 üretimi ve geri okuma** |
 | `birkat-audio` | 54 | 0 | Sondaj, çözümleme, dalga biçimi, FFT/spektrogram, oynatma, envanter, türetilmiş ses |
-| `birkat-transcription` | 54 | 0 | Kuyruk (kesinti kurtarma), kalite kontrolü (16 tür), yazım standardı, halüsinasyon, model paketi |
+| `birkat-transcription` | 59 | 0 | Kuyruk (kesinti kurtarma), kalite kontrolü (16 tür), yazım standardı, halüsinasyon, model paketi, motor seçimi |
 | `birkat-report` | 84 | 0 | Şablonlar, doldurma, UDF köprüsü, son kontrol, **gerçek PDF ve DOCX üretimi**, önizleme, yardımcı belgeler |
 | `birkat-backup` | 11 | 0 | Şifreli yedek, **gerçek geri yükleme testi**, kurcalama tespiti, saklama |
 | `birkat-updater` | 12 | 0 | Bütünlük, imza kapısı, ön yedek, kurulum, geri dönüş |
 | `birkat-app` | 58 | 0 | Vaka deposu, şifreli kasa, panel, **uçtan uca otomatik iş akışı** |
 | `birkat-desktop` | 13 | 0 | 20 ekran, arayüz durumu, doğrulama |
-| `birkat-transcription` (whisper) | +62 | 0 | Whisper/Candle motoru, cihaz seçimi, yeniden örnekleme, mel filtresi |
+| `birkat-transcription` (whisper) | +67 | 0 | Whisper/Candle motoru, cihaz seçimi, yeniden örnekleme, mel filtresi, **motor seçimi ve model keşfi** |
 
 ## 3. Test türleri ve örnekleri
 
@@ -221,7 +221,7 @@ platform çağrısı ve gerçek donanım etkileşimi eksiktir. Ayrıntı:
 
 ## 9. Sonuç
 
-- **490 test geçti, 0 başarısız** (varsayılan derleme).
+- **495 test geçti, 0 başarısız** (varsayılan derleme).
 - **62 ek test geçti** (Whisper özelliği ile); toplam 552 test çalıştırması.
 - Gerçek dosya üretimi ve geri okuma doğrulandı: UDF, PDF, DOCX, **E01**,
   **Ex01**, şifreli yedek, WAV.

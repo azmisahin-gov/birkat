@@ -1,0 +1,219 @@
+name: Release
+
+# Windows x64 çevrimdışı kurulum paketini üretir ve GitHub Releases bölümüne
+# yükler. Derleme ve paketleme geliştirici bilgisayarına bağlı değildir.
+#
+# ## Tetikleme
+#
+#   * `v*` biçiminde etiket (ör. v0.1.0) → yayın oluşturur.
+#   * Elle çalıştırma (workflow_dispatch) → paket üretir, yayın oluşturmaz.
+#
+# ## Model
+#
+# Whisper model dosyaları (1.6 GB) depoda tutulmaz. İş akışı, modeli
+# `MODEL_URL` deposundan indirir ve SHA-256 doğrulaması yapar. Model
+# indirilemezse veya hash uyuşmazsa **yayın oluşturulmaz**.
+#
+# `MODEL_URL` değişkenini şu yollarla tanımlayın:
+#   * Depo değişkeni: Settings → Secrets and variables → Actions → Variables
+#   * Veya iş akışını elle çalıştırırken `model_url` girdisi
+#
+# Modeli kendi sunucunuzda barındırın (ör. GitHub Release eki, kurumsal
+# dosya sunucusu) ve `model-package.lock.json` hash'lerini kullanın.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      model_url:
+        description: 'Model arşivinin indirme adresi (tar.gz)'
+        required: false
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  TARGET: x86_64-pc-windows-gnu
+
+jobs:
+  windows-installer:
+    name: Windows x64 kurulum paketi
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust kurulumu
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-gnu
+
+      - name: Bağımlılık önbelleği
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: windows-x64
+
+      - name: Çapraz derleme araçları ve NSIS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mingw-w64 nsis zip
+
+      - name: Model paketini indir
+        id: model
+        env:
+          MODEL_URL: ${{ inputs.model_url || vars.MODEL_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${MODEL_URL:-}" ]; then
+            echo "::error::MODEL_URL tanımlı değil. Depo değişkeni olarak ayarlayın:"
+            echo "::error::Settings → Secrets and variables → Actions → Variables → MODEL_URL"
+            echo "::error::Model olmadan çevrimdışı kurulum paketi ÜRETİLMEZ."
+            exit 1
+          fi
+          mkdir -p /tmp/model
+          echo "Model indiriliyor..."
+          curl -sSL --retry 3 --max-time 1800 -o /tmp/model.tar.gz "$MODEL_URL"
+          tar -xzf /tmp/model.tar.gz -C /tmp/model
+          # Arşiv tek bir alt klasör içeriyorsa düzleştir.
+          if [ "$(ls -1 /tmp/model | wc -l)" -eq 1 ] && [ -d "/tmp/model/$(ls -1 /tmp/model | head -1)" ]; then
+            inner="/tmp/model/$(ls -1 /tmp/model | head -1)"
+            mv "$inner"/* /tmp/model/ 2>/dev/null || true
+          fi
+          echo "Model dosyaları:"
+          ls -la /tmp/model
+          echo "dir=/tmp/model" >> "$GITHUB_OUTPUT"
+
+      - name: Model hash'lerini doğrula
+        run: |
+          python3 - /tmp/model <<'PYEOF'
+          import hashlib, json, os, sys
+          root = sys.argv[1]
+          lock = json.load(open("model-package.lock.json", encoding="utf-8"))
+          hatali = []
+          for e in lock["files"]:
+              p = os.path.join(root, e["path"])
+              if not os.path.isfile(p):
+                  hatali.append(f'{e["path"]}: DOSYA YOK')
+                  continue
+              h = hashlib.sha256()
+              with open(p, "rb") as f:
+                  while True:
+                      b = f.read(1 << 20)
+                      if not b:
+                          break
+                      h.update(b)
+              if h.hexdigest() != e["sha256"]:
+                  hatali.append(f'{e["path"]}: hash uyuşmuyor')
+          if hatali:
+              print("::error::Model hash doğrulaması başarısız:")
+              for x in hatali:
+                  print("::error::  " + x)
+              sys.exit(1)
+          print(f'{len(lock["files"])} model dosyası doğrulandı.')
+          PYEOF
+
+      - name: SBOM ve lisansları üret
+        run: |
+          cargo metadata --format-version 1 --all-features > /tmp/meta.json
+          python3 scripts/generate-sbom.py < /tmp/meta.json
+
+      - name: Güvenlik denetimi
+        run: |
+          cargo install cargo-audit --locked
+          cargo audit
+
+      - name: Windows paketini üret
+        run: |
+          ./scripts/package-windows.sh --model-dir /tmp/model
+
+      - name: Kurulum dosyasını doğrula
+        run: |
+          set -euo pipefail
+          SETUP=$(ls dist/*-setup.exe 2>/dev/null | head -1)
+          if [ -z "$SETUP" ]; then
+            echo "::error::Kurulum dosyası üretilemedi."
+            exit 1
+          fi
+          echo "Kurulum dosyası: $SETUP ($(stat -c%s "$SETUP") bayt)"
+          # .exe gerçekten Windows PE mi?
+          head -c 2 "$SETUP" | od -An -c | grep -q 'M   Z' \
+            || { echo "::error::Kurulum dosyası geçerli bir Windows PE değil."; exit 1; }
+          # Model pakette mi?
+          unzip -l dist/*-offline.zip | grep -q "models/model.safetensors" \
+            || { echo "::error::Model dosyası pakete dahil edilmemiş."; exit 1; }
+          echo "Doğrulama başarılı."
+
+      - name: Paketleri yükle (yapı çıktısı)
+        uses: actions/upload-artifact@v4
+        with:
+          name: birkat-windows-x64
+          path: |
+            dist/*.exe
+            dist/*.zip
+            dist/SHA256SUMS.txt
+            dist/BIRKAT-*-sbom.cdx.json
+            dist/BIRKAT-*-LICENSES.md
+          retention-days: 30
+
+      - name: GitHub Release oluştur
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: BİRKÂT ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## BİRKÂT ${{ github.ref_name }} — Windows x64 çevrimdışı kurulum paketi
+
+            Bu paket **internet bağlantısı gerektirmez**. Whisper large-v3-turbo
+            konuşma tanıma modeli paket içinde gelir.
+
+            ### Kurulum
+
+            1. `BIRKAT-*-windows-x64-offline-setup.exe` dosyasını indirin.
+            2. Dosyayı çalıştırın; Türkçe kurulum sihirbazı sizi yönlendirir.
+            3. Kurulum sonrası Başlat menüsünde ve masaüstünde BİRKÂT kısayolu oluşur.
+
+            Kaldırma: Ayarlar → Uygulamalar → BİRKÂT → Kaldır.
+            Kaldırma vaka verinizi silmez.
+
+            ### Dosyalar
+
+            | Dosya | Açıklama |
+            |---|---|
+            | `*-setup.exe` | Windows kurulum dosyası (önerilen) |
+            | `*-offline.zip` | Kurulum gerektirmeyen taşınabilir paket |
+            | `SHA256SUMS.txt` | Dosya hash'leri |
+            | `*-sbom.cdx.json` | Yazılım malzeme listesi (CycloneDX) |
+            | `*-LICENSES.md` | Bağımlılık lisansları |
+
+            ### Bütünlük doğrulaması
+
+            ```
+            sha256sum -c SHA256SUMS.txt
+            ```
+
+            ### Sistem gereksinimleri
+
+            - Windows 11 x64
+            - 8 GB RAM (16 GB önerilir)
+            - 10 GB boş disk alanı
+
+            ### Bilinen sınırlar
+
+            Resmî UYAP Editör ile UDF uyumluluk testi ve gerçek USB/SD aygıt
+            testleri kullanıcı ortamında yapılmalıdır. Ayrıntı: `belgeler/`.
+
+            ---
+            _Bu yayın bir yapay zekâ ajanı (OpenHands) tarafından kullanıcı adına oluşturulmuştur._
+          files: |
+            dist/*.exe
+            dist/*.zip
+            dist/SHA256SUMS.txt
+            dist/BIRKAT-*-sbom.cdx.json
+            dist/BIRKAT-*-LICENSES.md

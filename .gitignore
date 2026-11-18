@@ -1,4 +1,15 @@
+# Derleme çıktıları
 /target
-**/*.rs.bk
+
+# Yayın paketleri (GitHub Releases'e yüklenir, depoda tutulmaz)
+/dist
+
+# Model dosyaları (1.6 GB; kurulum paketine eklenir, depoda tutulmaz)
+/models
+*.safetensors
+
+# Yerel veri ve geçici dosyalar
+/birkat-veri
+*.rs.bk
 *.pdb
 .agent_tmp/

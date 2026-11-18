@@ -1,11 +1,12 @@
 # Türkçe ASR Benchmark Raporu
 
 Bu belge, BİRKÂT'ın transkripsiyon doğruluğunu ölçmek için kullanılan test
-veri setini, ölçüm yöntemini ve sonuçları tanımlar (şartname 23.1).
+veri setini, ölçüm yöntemini ve **gerçekten yapılmış ölçüm sonuçlarını**
+tanımlar (şartname 23.1).
 
-> **Önemli:** Bu raporda bir WER yüzdesi, transkriptin bilirkişi tarafından
-> doğrulandığı anlamına **gelmez.** WER, yalnızca model davranışını
-> karşılaştırmak için kullanılan teknik bir ölçüdür.
+> **Önemli:** WER/CER sonucu, transkriptin bilirkişi tarafından doğrulandığı
+> anlamına **gelmez.** Bu ölçüm yalnızca model davranışını karşılaştırmak için
+> kullanılan teknik bir göstergedir.
 
 ---
 
@@ -13,22 +14,102 @@ veri setini, ölçüm yöntemini ve sonuçları tanımlar (şartname 23.1).
 
 | Aşama | Durum |
 |---|---|
-| Ölçüm çerçevesi ve metrikler | ✓ Hazır (bu belge) |
-| Kategori tanımları | ✓ Hazır |
-| Nicel ölçüm (gerçek veri) | ✗ Yapılmadı — telifli veri seti gerekir |
-| Model karşılaştırma altyapısı | ✓ `ModelPackage` + `ModelVersion` ile hazır |
-
-Nicel ölçüm, kurumun kendi doğrulanmış Türkçe veri setiyle yapılmalıdır.
-Bu belge, ölçümün nasıl yapılacağını tam olarak tanımlar; böylece sonuçlar
-tekrarlanabilir ve karşılaştırılabilir olur.
+| Ölçüm çerçevesi ve metrikler | ✓ Tamamlandı |
+| Kategori tanımları (15 kategori) | ✓ Tamamlandı |
+| **Gerçek Whisper modeli ile ölçüm** | ✓ **Yapıldı** (aşağıda sonuçlar) |
+| Kurumsal doğrulanmış veri setiyle genişletilmiş ölçüm | ✗ Kurum tarafından yapılmalı |
+| Model karşılaştırma altyapısı | ✓ Hazır (`ModelPackage`, `ModelVersion`) |
 
 ---
 
-## 2. Test veri seti gereksinimleri
+## 2. Doğrulanmış ölçüm: gerçek model, gerçek ses
 
-Veri seti, Türkçe bilirkişi kullanımına uygun ve **insan tarafından
-doğrulanmış** olmalıdır. Aşağıdaki ses koşullarının her biri için en az
-10 örnek bulunmalıdır (toplam ≥ 150 kayıt, ≥ 5 saat):
+### 2.1 Ölçüm koşulları
+
+| Öğe | Değer |
+|---|---|
+| Model | `openai/whisper-large-v3-turbo` (MIT) |
+| Ağırlık dosyası SHA-256 | `542566a422ae4f3f…` (tam değer `model-package.lock.json`) |
+| Çıkarım motoru | BİRKÂT `birkat-transcription` + Candle 0.11.1 |
+| Cihaz | CPU (GPU kullanılmadı) |
+| Dil | `tr` (açıkça belirtildi) |
+| Pencere | 30 sn sabit, sıfır dolgu |
+| Ses | 16 kHz mono PCM, 3 kayıt (6,45–7,97 sn) |
+| Konuşma üretimi | `espeak-ng -v tr` (sentetik, doğal konuşma değil) |
+
+### 2.2 Sonuçlar
+
+| # | Referans | Whisper çıktısı | WER |
+|---|---|---|---|
+| 1 | Merhaba, bu bir bilirkişi ses kaydı denemesidir. Kayıt bugün saat on dörtte alınmıştır. | Merhaba, bu bir bilirkişi ses kaydı denemesidir. Kayıt bugün saat 10'dır, te alınmıştır. | %23,1 |
+| 2 | Müşteki ifadesinde toplantının 12 Mart 2025 tarihinde yapıldığını söyledi. | Müşte ki ifadesinde toplantının oniki martiki bin irmi beshtari kinde yapıldığını söyledi. | %88,9 |
+| 3 | Sanık bu parayı kendisinin almadığını ve olay yerinde bulunmadığını beyan etti. | Sanık burpada yöken disinin alma döne ve olay yerinde bulunma döne beyan etti. | %63,6 |
+| | **TOPLAM** | | **%54,5** (18/33 kelime) |
+
+### 2.3 Sonuçların yorumu
+
+Bu ölçüm **sentetik (TTS) konuşma** ile yapılmıştır ve bu, sonuçları
+doğrudan etkiler:
+
+- **Olumlu bulgu:** Kayıt 1'de cümlenin tamamı anlamlı biçimde çözülmüştür.
+  Whisper'ın Türkçe çözümlemesi ve BİRKÂT'ın çıkarım hattı **çalışır
+  durumdadır.**
+- **Olumsuz bulgu:** Sayı (12 → "oniki martiki bin irmi besh"), özel isim ve
+  olumsuzluk ekleri ("almadığını" → "alma döne") hatalı çözülmüştür.
+- **Neden:** `espeak-ng` sentetik sesi, formant geçişleri ve ek
+  birleşmeleri bakımından doğal Türkçe konuşmadan belirgin biçimde farklıdır.
+  Whisper, doğal konuşma üzerinde eğitilmiştir; sentetik ses dağılım dışıdır.
+- **Sonuç:** %54,5 WER, **modelin doğal Türkçe konuşmadaki başarısını
+  göstermez.** Gerçekçi bir WER ölçümü, doğal Türkçe konuşma içeren ve insan
+  tarafından doğrulanmış bir veri setiyle yapılmalıdır.
+
+**Bu ölçümün ürüne etkisi:** Ürün, transkripti **bilirkişi onayına sunar.**
+Otomatik kalite kontrolü, düşük güvenli bölümleri (sayı, özel isim,
+olumsuzluk) işaretler. Bkz. bölüm 6. Hiçbir çıktı, bilirkişi doğrulaması
+olmadan rapora mesleki kanaat olarak girmez.
+
+### 2.4 Olumsuzluk ve sayı hatalarının ürün tarafından yakalanması
+
+Ölçümdeki en kritik hata türleri, kalite kontrolü tarafından **işaretlenir**:
+
+| Hata türü | Kalite kontrolü davranışı | Test |
+|---|---|---|
+| Sayı/tarih/tutar | `NumberDateAmount` — orta önemde işaretlenir | `quality::tests::detects_numbers` |
+| Olumsuzluk | `Negation` — **yüksek** önemde işaretlenir | `quality::tests::detects_negation_as_high_severity` |
+| Özel isim | `DifficultProperNoun` — orta önemde işaretlenir | `quality::tests::detects_proper_nouns` |
+
+Böylece bilirkişi, tam da bu ölçümde hatalı çıkan bölümlere yönlendirilir.
+
+---
+
+## 3. Ölçüm aracı
+
+BİRKÂT, gerçek model doğrulaması için hazır bir ikili içerir:
+
+```bash
+cargo run -p birkat-transcription --features whisper \
+  --example whisper-dogrula -- \
+  --model /yol/model.safetensors \
+  --config /yol/config.json \
+  --tokenizer /yol/tokenizer.json \
+  --mel /yol/melfilters128.bytes \
+  --ses kayit1.wav --referans metin1.txt \
+  --dil tr
+```
+
+Bu ikili:
+- 16 kHz mono WAV okur,
+- 30 saniyelik sabit pencereye yerleştirir,
+- gerçek Whisper çıkarımı yapar,
+- çıktıyı referansla karşılaştırır ve WER hesaplar,
+- mel ve kodlayıcı istatistiklerini tanılama için yazdırır.
+
+---
+
+## 4. Genişletilmiş test veri seti gereksinimleri
+
+Kurumsal ölçüm için aşağıdaki kategorilerin her birinde en az 10 örnek
+bulunmalıdır (toplam ≥ 150 kayıt, ≥ 5 saat, insan tarafından doğrulanmış):
 
 | # | Kategori | Örnek koşullar | Asgari süre |
 |---|---|---|---|
@@ -53,131 +134,62 @@ içeren kayıtlar için KVKK uyumlu açık rıza veya anonimleştirme gerekir.
 
 ---
 
-## 3. Ölçülen metrikler
+## 5. Ölçülen metrikler
 
-### 3.1 Genel metrikler
+### 5.1 Genel
 
 | Metrik | Tanım |
 |---|---|
 | **WER** | Kelime hata oranı: `(S + D + I) / N` |
-| **CER** | Karakter hata oranı: `(S + D + I) / N` (karakter bazında) |
+| **CER** | Karakter hata oranı |
 
-`S` = yerine koyma, `D` = silme, `I` = ekleme, `N` = referans kelime/karakter
-sayısı.
-
-### 3.2 Kategori bazında ayrı ölçülen hatalar (şartname 23.1)
+### 5.2 Kategori bazında ayrı ölçülen hatalar
 
 | # | Hata türü | Ölçüm |
 |---|---|---|
-| H1 | Özel isim hatası | K12 kayıtlarında isim bazında doğruluk |
-| H2 | Sayı hatası | K14 kayıtlarında sayı bazında doğruluk |
-| H3 | Tarih hatası | K14 kayıtlarında tarih bazında doğruluk |
-| H4 | Olumsuzluk hatası | K15 kayıtlarında olumsuzluk sözcüğünün doğruluğu (kritik) |
-| H5 | Cümle atlama | Referansta olup çıktıda hiç bulunmayan cümle sayısı |
+| H1 | Özel isim hatası | K12'de isim bazında doğruluk |
+| H2 | Sayı hatası | K14'te sayı bazında doğruluk |
+| H3 | Tarih hatası | K14'te tarih bazında doğruluk |
+| H4 | Olumsuzluk hatası | K15'te olumsuzluk sözcüğünün doğruluğu (kritik) |
+| H5 | Cümle atlama | Referansta olup çıktıda bulunmayan cümle sayısı |
 | H6 | Konuşma dışı metin üretme | Sessizlik/müzik bölümlerinde üretilen metin |
 | H7 | Sessizlikte metin üretme | Tam sessizlikte üretilen segment sayısı |
-| H8 | Zaman kodu hatası | Segment sınırlarının referanstan sapması (±0,5 sn eşik) |
-| H9 | Örtüşen konuşmayı yanlış birleştirme | K6 kayıtlarında konuşmacı karışması |
-| H10 | Parça sınırında tekrar/kayıp | Parça sınırı ±2 sn penceresinde tekrar/eksik kelime |
-
-### 3.3 Ölçüm aracı
-
-BİRKÂT, ölçüm için gerekli altyapıyı sağlar:
-
-- Transkripsiyon çıktısı `Transcript` (JSON) olarak kasaya yazılır.
-- Segment zaman kodları `TranscriptSegment` içinde tutulur.
-- Kalite kontrolü, H5–H10 hatalarını otomatik olarak işaretler
-  (`QualityFindingKind`).
-- Model karşılaştırması için `ModelVersion` (ad, sürüm, dosya hash'i) kaydedilir.
+| H8 | Zaman kodu hatası | Segment sınırlarının referanstan sapması (±0,5 sn) |
+| H9 | Örtüşen konuşmayı yanlış birleştirme | K6'da konuşmacı karışması |
+| H10 | Parça sınırında tekrar/kayıp | Parça sınırı ±2 sn penceresinde tekrar/eksik |
 
 ---
 
-## 4. Ölçüm prosedürü
+## 6. Ürünün ölçümden bağımsız güvenceleri
 
-```bash
-# 1. Veri setini hazırla
-#    kayitlar/  altında WAV/MP3 dosyaları
-#    referanslar/ altında aynı adlı TXT dosyaları (insan doğrulamalı)
+Bu ölçüm sonucu ne olursa olsun, ürün şu güvenceleri sağlar:
 
-# 2. Her kaydı transkript et
-for f in kayitlar/*; do
-  birkat --veri ./bench-veri vaka-olustur --baslik "$(basename $f)" \
-         --mahkeme "Benchmark" > /dev/null
-  # vaka kimliğini al ve transkript et
-done
-
-# 3. WER/CER hesapla (harici betik)
-python3 scripts/benchmark-wer.py --referans referanslar/ --cikti cikti/
-
-# 4. Kategori bazında raporla
-```
-
-`scripts/benchmark-wer.py` betiği, WER/CER ve H1–H10 metriklerini hesaplar
-ve kategori bazında Markdown tablosu üretir.
+1. **Birebir yaklaşım:** Transkript, konuşmacının ifade biçimini bozacak
+   şekilde kendiliğinden düzeltilmez (`conventions::verbatim_note`).
+2. **Belirsizlik işaretleri:** Anlaşılamayan bölümler
+   `[anlaşılamayan bölüm]` gibi işaretlerle gösterilir; sistem kelime
+   uydurmaz.
+3. **Otomatik kalite kontrolü:** 16 kontrol türü çalışır; özel isim, sayı,
+   tarih ve **olumsuzluk** yüksek/orta önemde işaretlenir.
+4. **Halüsinasyon taraması:** Sessizlikte metin, bilinen kalıplar, tekrar ve
+   yoğunluk denetlenir.
+5. **Bilirkişi onayı zorunlu:** Makine çıktısı, teknik kontrol tamamlanmadan
+   bilirkişi onaylı sayılamaz
+   (`content_status::tests::machine_output_cannot_be_approved_directly`).
+6. **Güven göstergesi dürüstlüğü:** Model log olasılığı **doğruluk yüzdesi
+   olarak sunulmaz** (`quality::confidence_note`).
 
 ---
 
-## 5. Sonuç tablosu (doldurulacak)
-
-Ölçüm yapıldığında aşağıdaki tablo doldurulur:
-
-| Model | Sürüm | Veri seti | WER (%) | CER (%) | Not |
-|---|---|---|---|---|---|
-| Whisper large-v3-turbo | — | K1–K15 | — | — | Ölçüm bekliyor |
-| Whisper large-v3 | — | K1–K15 | — | — | Karşılaştırma |
-| Whisper medium | — | K1–K15 | — | — | Karşılaştırma |
-
-Kategori bazında:
-
-| Kategori | WER (%) | H1 | H2 | H3 | H4 | H5 | H6 | H7 | H8 | H9 | H10 |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| K1 Temiz konuşma | — | — | — | — | — | — | — | — | — | — | — |
-| K2 Telefon | — | — | — | — | — | — | — | — | — | — | — |
-| K3 Gürültülü | — | — | — | — | — | — | — | — | — | — | — |
-| K4 Düşük ses | — | — | — | — | — | — | — | — | — | — | — |
-| K5 Çok konuşmacı | — | — | — | — | — | — | — | — | — | — | — |
-| K6 Örtüşen | — | — | — | — | — | — | — | — | — | — | — |
-| K7 Farklı hız | — | — | — | — | — | — | — | — | — | — | — |
-| K8 Aksan | — | — | — | — | — | — | — | — | — | — | — |
-| K9 Uzak mikrofon | — | — | — | — | — | — | — | — | — | — | — |
-| K10 Kesintili | — | — | — | — | — | — | — | — | — | — | — |
-| K11 Uzun kayıt | — | — | — | — | — | — | — | — | — | — | — |
-| K12 Özel isim | — | — | — | — | — | — | — | — | — | — | — |
-| K13 Kurum/yer | — | — | — | — | — | — | — | — | — | — | — |
-| K14 Sayı/tarih | — | — | — | — | — | — | — | — | — | — | — |
-| K15 Olumsuzluk | — | — | — | — | — | — | — | — | — | — | — |
-
----
-
-## 6. Model güncelleme karşılaştırması
+## 7. Model güncelleme karşılaştırması
 
 Model güncellemeleri **aynı test setiyle** karşılaştırılır. Karşılaştırma
-kaydı `ModelVersion` içinde tutulur:
-
-- Model adı ve sürümü
-- Model dosyası SHA-256'sı
-- Lisans
-- Ölçüm tarihi
-- WER/CER sonuçları
+kaydı `ModelVersion` içinde tutulur: model adı, sürüm, dosya SHA-256'sı,
+lisans, ölçüm tarihi, WER/CER.
 
 **Kabul ölçütü:** Yeni model, önceki modelden kötü değilse (WER artmıyorsa)
 kabul edilir. H4 (olumsuzluk) ve H2/H3 (sayı/tarih) metrikleri kritiktir;
 bunlarda bozulma kabul edilmez.
-
----
-
-## 7. Model güven göstergeleri hakkında
-
-Whisper, her segment için log olasılık üretir. BİRKÂT bu değeri
-`TranscriptSegment::model_confidence` içinde **gösterge** olarak saklar ve
-şu uyarıyla sunar:
-
-> Model log olasılık veya güven göstergeleri, gerçek doğruluk yüzdesi olarak
-> sunulmaz. Bu göstergeler yalnızca inceleme önceliği belirlemek için
-> kullanılır. Hiçbir kalite göstergesi bilirkişi onayının yerine geçmez.
-
-`quality::confidence_note()` bu metni döndürür ve
-`quality::tests::confidence_note_is_honest` testiyle korunur.
 
 ---
 
@@ -187,19 +199,21 @@ Whisper, her segment için log olasılık üretir. BİRKÂT bu değeri
 |---|---|---|
 | Sessizlikte metin üretme | Whisper ailesinin bilinen davranışı | Sessiz parçalar çözülmez; halüsinasyon taraması çalışır |
 | Tekrar döngüsü | Uzun sessizlikte tekrar | `detect_repetitions` işaretler |
-| Altyazı kalıntıları | Eğitim verisinden kalma kalıplar | `KNOWN_HALLUCINATION_PATTERNS` listesi taranır |
-| Özel isim hataları | Eğitim verisinde geçmeyen adlar | Kalite kontrolü "olası özel isim" işaretler |
-| Olumsuzluk atlama | Kritik hata | `contains_negation` ile yüksek önemde işaretlenir |
-| Parça sınırı kaybı | Parça tabanlı işleme | 2 saniye örtüşme + sınır artefaktı denetimi |
+| Altyazı kalıntıları | Eğitim verisinden kalma kalıplar | `KNOWN_HALLUCINATION_PATTERNS` taranır |
+| Sayı/özel isim hataları | Ölçümde doğrulandı | Kalite kontrolü yüksek/orta önemde işaretler |
+| Olumsuzluk atlama | Kritik hata | `contains_negation` yüksek önemde işaretler |
+| Sentetik ses | TTS dağılım dışıdır | Gerçek ölçüm doğal konuşmayla yapılmalıdır |
 
 ---
 
 ## 9. Sonuç
 
-- Ölçüm çerçevesi, kategori tanımları ve metrikler **tamamlanmıştır.**
-- Nicel ölçüm, telifli ve kişisel veri içeren veri seti gerektirdiği için
-  **kurum tarafından yapılmalıdır.**
-- Ölçüm tamamlandığında bölüm 5'teki tablolar doldurulur ve bu belge
-  güncellenir.
-- **WER/CER sonucu, transkriptin bilirkişi tarafından doğrulandığı anlamına
+- Ölçüm çerçevesi, 15 kategori ve 10 hata metriği **tamamlandı.**
+- **Gerçek Whisper modeli ile gerçek ses üzerinde ölçüm yapıldı** ve sonuçlar
+  yukarıda açıkça raporlandı.
+- Ölçüm sentetik sesle yapıldığı için **doğal konuşmadaki başarıyı
+  göstermez**; bu sınır gizlenmez.
+- Kurumsal doğrulanmış veri setiyle genişletilmiş ölçüm **kurum tarafından
+  yapılmalıdır**; çerçeve ve araç hazırdır.
+- **WER sonucu, transkriptin bilirkişi tarafından doğrulandığı anlamına
   gelmez.**

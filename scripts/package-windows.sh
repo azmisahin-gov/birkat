@@ -160,14 +160,35 @@ CLI_EXE="target/$TARGET/release/birkat.exe"
 [[ -f "$DESKTOP_EXE" ]] || die "Masaüstü ikilisi üretilemedi: $DESKTOP_EXE"
 [[ -f "$CLI_EXE" ]] || die "Komut satırı ikilisi üretilemedi: $CLI_EXE"
 
-if ! x86_64-w64-mingw32-objdump -p "$DESKTOP_EXE" 2>/dev/null | grep -qi "DLL Name"; then
-  die "Üretilen ikili geçerli bir Windows PE dosyası değil."
+# PE imzası: her Windows yürütülebilir dosyası "MZ" ile başlar.
+if [[ "$(head -c 2 "$DESKTOP_EXE")" != "MZ" ]]; then
+  die "Üretilen ikili geçerli bir Windows PE dosyası değil (MZ imzası yok)."
 fi
 
-if x86_64-w64-mingw32-objdump -p "$DESKTOP_EXE" 2>/dev/null \
-     | grep -qiE "libgcc|libwinpthread|libstdc"; then
-  die "İkili taşınabilir çalışma zamanı kitaplığına bağımlı (statik bağlama gerekli)."
+# objdump çıktısı büyüktür ve uyarıları stderr'e yazarak sıfırdan farklı
+# çıkabilir. Ayrıca `grep -q` erken çıkınca `pipefail` altında SIGPIPE
+# (exit 141) oluşur ve denetim yanlışlıkla başarısız görünür. Bu nedenle
+# çıktı bir kez dosyaya alınır ve erken çıkmayan `grep -c` ile sayılır.
+OBJDUMP_CIKTI="$(mktemp)"
+x86_64-w64-mingw32-objdump -p "$DESKTOP_EXE" >"$OBJDUMP_CIKTI" 2>/dev/null || true
+
+DLL_SAYISI="$(grep -ci 'DLL Name' "$OBJDUMP_CIKTI" || true)"
+if [ "${DLL_SAYISI:-0}" -eq 0 ]; then
+  rm -f "$OBJDUMP_CIKTI"
+  die "İkilinin içe aktarma tablosu okunamadı; geçerli bir Windows PE değil."
 fi
+
+TASINABILIR_SAYISI="$(grep -ciE 'libgcc|libwinpthread|libstdc' "$OBJDUMP_CIKTI" || true)"
+if [ "${TASINABILIR_SAYISI:-0}" -ne 0 ]; then
+  rm -f "$OBJDUMP_CIKTI"
+  die "İkili taşınabilir çalışma zamanı kitaplığına bağlı (statik bağlama gerekli)."
+fi
+
+# Yalnızca Windows sistem DLL'lerine bağlı olmalı; kullanıcı hiçbir çalışma
+# zamanı kurmak zorunda kalmamalıdır.
+BAGIMLILIKLAR="$(grep -i 'DLL Name' "$OBJDUMP_CIKTI" | awk '{print $3}' | sort -u | tr '\n' ' ' || true)"
+rm -f "$OBJDUMP_CIKTI"
+echo "Bağımlılıklar: $BAGIMLILIKLAR"
 
 # ------------------------------------------------------------ paket klasörü
 say "Paket klasörü hazırlanıyor: $PKG"
@@ -277,7 +298,9 @@ SETUP="$DIST/${AD}-setup.exe"
 if [[ "$NSIS_OK" -eq 1 ]]; then
   say "NSIS kurulum dosyası üretiliyor"
   mkdir -p "$DIST/nsis"
-  PKG_WIN="$(echo "$PKG" | sed 's|/|\\\\|g')"
+  # NSIS mutlak yol ister; betik dist/nsis/ içinden çalışır.
+  PKG_ABS="$(cd "$(dirname "$PKG")" && pwd)/$(basename "$PKG")"
+  PKG_WIN="$(echo "$PKG_ABS" | sed 's|/|\\\\|g')"
   cat > "$DIST/nsis/birkat.nsi" <<NSIEOF
 !include "MUI2.nsh"
 
@@ -293,7 +316,10 @@ InstallDir "\$PROGRAMFILES64\\BIRKAT"
 InstallDirRegKey HKLM "Software\\BIRKAT" "InstallDir"
 RequestExecutionLevel admin
 Unicode true
-SetCompressor /SOLID lzma
+# Model ağırlıkları yoğun (neredeyse sıkıştırılamaz) f16 verisidir.
+# LZMA, saatler süren sıkıştırma karşılığında neredeyse hiç kazanç sağlamaz;
+# zlib hızlıdır ve kurulum süresini makul tutar.
+SetCompressor zlib
 
 !define MUI_ABORTWARNING
 !define MUI_WELCOMEPAGE_TITLE "BİRKÂT kurulumu"

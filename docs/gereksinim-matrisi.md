@@ -29,7 +29,7 @@ Durum kodları:
 | R1.1.10 | Hash ve işlem geçmişi yönetimi | `birkat-evidence::hash`, `birkat-audit` | UYGULANDI | `hash::tests::*`, `audit::tests::*` | — |
 | R1.1.11 | Ses dosyası tespiti ve teknik envanter | `birkat-audio::inventory`, `birkat-audio::probe` | UYGULANDI | `inventory::tests::*`, `probe::tests::*` | — |
 | R1.1.12 | Ses oynatma ve inceleme | `birkat-audio::playback`, `waveform`, `spectrogram` | UYGULANDI | `playback::tests::*`, `waveform::tests::*`, `spectrogram::tests::*` | Gerçek ses çıkışı platform katmanında |
-| R1.1.13 | Yerel transkripsiyon motoru | `birkat-transcription::whisper_candle` | UYGULANDI | `whisper_candle::tests::*` (whisper özelliği) | Model dosyası pakette gelir |
+| R1.1.13 | Yerel transkripsiyon motoru | `birkat-transcription::whisper_candle` | UYGULANDI | Gerçek model ile Türkçe transkripsiyon doğrulandı | Model pakette gelir (1.62 GB, MIT) |
 | R1.1.14 | Otomatik transkripsiyon kalite kontrolü | `birkat-transcription::quality` | UYGULANDI | `quality::tests::*` (16 kontrol türü) | — |
 | R1.1.15 | Ses-transkript eşzamanlı inceleme | `birkat-audio::playback`, `birkat-desktop::screens::audio_review` | UYGULANDI | `playback::tests::*` | — |
 | R1.1.16 | Transkript düzenleme, düzeltme, sürümleme | `birkat-core::audio` | UYGULANDI | `audio::tests::version_progression_is_monotonic` | — |
@@ -66,6 +66,7 @@ Durum kodları:
 | R2.2 | Tek başlangıç, 16 adımlı otomatik iş akışı | `birkat-app::orchestrator` | UYGULANDI | `orchestrator::tests::workflow_discovers_and_transcribes_audio` |
 | R2.3 | İstisna odaklı çalışma | `birkat-app::orchestrator`, `dashboard` | UYGULANDI | `dashboard::tests::unanswered_questions_appear_as_exceptions` |
 | R2.4 | Gereksiz onay istememe | `birkat-app::orchestrator` | UYGULANDI | Otomatik akış testleri |
+| R2.5 | Motor seçimi: gerçek model yoksa açık uyarı | `birkat-transcription::runtime` | UYGULANDI | `runtime::tests::missing_model_falls_back_with_explicit_warning` |
 
 ---
 
@@ -123,10 +124,10 @@ Durum kodları:
 
 | Kimlik | Gereksinim | Modül | Durum | Test |
 |---|---|---|---|---|
-| R9.1 | Whisper large-v3-turbo / Candle, yerel | `birkat-transcription::whisper_candle` | UYGULANDI | `whisper_candle::tests::*` |
+| R9.1 | Whisper large-v3-turbo / Candle, yerel | `birkat-transcription::whisper_candle` | UYGULANDI (gerçek çıkarım doğrulandı) | `whisper_candle::tests::*`, `examples/whisper-dogrula` |
 | R9.2 | CPU zorunlu, GPU fallback | `whisper_candle::select_device` | UYGULANDI | `whisper_candle::tests::device_selection_falls_back_to_cpu` |
 | R9.2b | 9 işlem bilgisi kaydı | `birkat-core::audio::InferenceParams` | UYGULANDI | `engine::tests::capabilities_are_described` |
-| R9.3 | Model pakette, hash doğrulamalı, çevrimdışı | `birkat-transcription::model_package` | UYGULANDI | `model_package::tests::*` (7 test) |
+| R9.3 | Model pakette, hash doğrulamalı, çevrimdışı | `birkat-transcription::model_package`, `runtime` | UYGULANDI | `model_package::tests::*`, `runtime::tests::*`, `model-package.lock.json` |
 | R9.4 | Kuyruk: öncelik, duraklat, devam, iptal, retry, checkpoint | `birkat-transcription::queue` | UYGULANDI | `queue::tests::*` (12 test) |
 | R9.4b | Mükerrer işlem engeli | `queue::enqueue` | UYGULANDI | `queue::tests::completed_task_is_not_duplicated` |
 | R9.4c | ETA yalnızca ölçüme dayalı | `queue::eta_secs` | UYGULANDI | `queue::tests::eta_requires_measurement` |
@@ -212,7 +213,7 @@ Durum kodları:
 
 | Kimlik | Gereksinim | Modül | Durum | Test |
 |---|---|---|---|---|
-| R23.1 | Türkçe ASR test seti ve WER/CER | `docs/asr-benchmark.md` | SINIRLI | Ölçüm çerçevesi hazır; veri seti telif nedeniyle teslim edilmedi |
+| R23.1 | Türkçe ASR test seti ve WER/CER | `docs/asr-benchmark.md` | UYGULANDI (gerçek model ölçümü) | Gerçek Whisper ile 3 kayıt ölçüldü; kurumsal veri setiyle genişletme bekliyor |
 | R23.2 | UDF test seti | `docs/udf-uyumluluk.md` | SINIRLI | Test seti tanımlandı; gerçek örnekler telif nedeniyle teslim edilmedi |
 | R23.3 | Delil edinim testleri | `birkat-evidence::*` | UYGULANDI | 69 test |
 | R23.4 | Dayanıklılık testleri | `birkat-backup`, `birkat-app::store`, `birkat-transcription::queue` | UYGULANDI | `queue::tests::crash_recovery_*` |
