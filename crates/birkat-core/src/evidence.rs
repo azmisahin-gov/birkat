@@ -284,7 +284,7 @@ pub struct PartitionInfo {
 }
 
 /// Aygıt bağlantı türü.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE")]
 pub enum ConnectionKind {
     /// USB.
@@ -302,13 +302,14 @@ pub enum ConnectionKind {
     /// Ağ kaynağı.
     Network,
     /// Bilinmiyor.
+    #[default]
     Unknown,
 }
 
 /// Yazma koruması durumu (5.3).
 ///
 /// Yazılımsal koruma donanımsal korumaya eşdeğer gösterilmez.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "SCREAMING_SNAKE_CASE", tag = "state", content = "detail")]
 pub enum WriteProtectionState {
     /// Donanımsal yazma engelleyici.
@@ -318,6 +319,7 @@ pub enum WriteProtectionState {
     /// Windows yazılımsal salt okunur özelliği.
     WindowsSoftwareReadOnly,
     /// Koruma yok.
+    #[default]
     None,
     /// Durum doğrulanamadı.
     Unverified(String),
