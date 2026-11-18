@@ -1,0 +1,24 @@
+[package]
+name = "birkat-evidence"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "BİRKÂT delil edinimi, aygıt yönetimi ve imaj desteği"
+
+[dependencies]
+birkat-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true }
+sha1 = { workspace = true }
+md-5 = { workspace = true }
+hex = { workspace = true }
+walkdir = { workspace = true }
+time = { workspace = true }
+zip = { workspace = true }
+ewf-image = { version = "0.6", default-features = false, features = ["verify"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }

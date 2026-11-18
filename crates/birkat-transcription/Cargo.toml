@@ -1,0 +1,56 @@
+[package]
+name = "birkat-transcription"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "BİRKÂT yerel transkripsiyon motoru, kuyruk ve kalite kontrolü"
+
+[dependencies]
+birkat-core = { workspace = true }
+birkat-audio = { workspace = true, optional = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+time = { workspace = true }
+walkdir = { workspace = true }
+
+[features]
+default = []
+whisper = [
+    "dep:candle-core",
+    "dep:candle-nn",
+    "dep:candle-transformers",
+    "dep:tokenizers",
+    "dep:birkat-audio",
+]
+# GPU hızlandırma özellikleri (opsiyonel; başlatılamazsa CPU'ya düşülür).
+cuda = []
+metal = []
+
+[dependencies.candle-core]
+workspace = true
+optional = true
+
+[dependencies.candle-nn]
+workspace = true
+optional = true
+
+[dependencies.candle-transformers]
+workspace = true
+optional = true
+
+[dependencies.tokenizers]
+workspace = true
+optional = true
+
+[[example]]
+name = "whisper-dogrula"
+required-features = ["whisper"]
+
+[dev-dependencies]
+tempfile = { workspace = true }
+hound = { workspace = true }
+serde_json = { workspace = true }

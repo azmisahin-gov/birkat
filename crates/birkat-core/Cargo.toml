@@ -1,0 +1,13 @@
+[package]
+name = "birkat-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "BİRKÂT çekirdek alan modeli ve iş akışı motoru"
+
+[dependencies]
+serde = { workspace = true }
+uuid = { workspace = true }
+time = { workspace = true }
+thiserror = { workspace = true }

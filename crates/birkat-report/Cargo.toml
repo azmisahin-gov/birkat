@@ -1,0 +1,20 @@
+[package]
+name = "birkat-report"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "BİRKÂT rapor motoru, şablonlar ve yardımcı belgeler"
+
+[dependencies]
+birkat-core = { workspace = true }
+birkat-udf = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+time = { workspace = true }
+zip = { workspace = true }
+printpdf = { version = "0.12", default-features = false, features = ["images"] }
+
+[dev-dependencies]
+tempfile = { workspace = true }
