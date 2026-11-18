@@ -62,6 +62,14 @@ macro_rules! define_id {
                 Self(value.to_string())
             }
         }
+
+        impl std::str::FromStr for $name {
+            type Err = std::convert::Infallible;
+
+            fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+                Ok(Self(s.to_string()))
+            }
+        }
     };
 }
 

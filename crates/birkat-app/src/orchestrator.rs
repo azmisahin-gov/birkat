@@ -371,6 +371,16 @@ pub fn run_automatic_workflow(
 
     // 14-16: Rapor taslağı, UDF ve son kontrol listesi.
     step(&mut out, "Rapor taslağı ve UDF hazırlanıyor");
+
+    // Rapor girdisini kasaya yaz; böylece rapor komutu aynı veriyi kullanır.
+    if let Ok(json) = serde_json::to_string_pretty(&out.report_input) {
+        let _ = workspace.vault.store_bytes(
+            "rapor/rapor-girdisi.json",
+            json.as_bytes(),
+            "otomatik iş akışı",
+        );
+    }
+
     let experts: Vec<birkat_core::profile::ExpertProfile> = store.list_profiles()?;
     let report = birkat_report::build_report(
         &workspace.case,

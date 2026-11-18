@@ -573,6 +573,7 @@ dependencies = [
  "anyhow",
  "birkat-app",
  "birkat-audio",
+ "birkat-audit",
  "birkat-backup",
  "birkat-core",
  "birkat-crypto",
@@ -586,6 +587,7 @@ dependencies = [
  "time",
  "tracing",
  "tracing-subscriber",
+ "walkdir",
 ]
 
 [[package]]

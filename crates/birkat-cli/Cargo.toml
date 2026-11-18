@@ -13,6 +13,7 @@ path = "src/main.rs"
 [dependencies]
 birkat-core = { workspace = true }
 birkat-app = { workspace = true }
+birkat-audit = { workspace = true }
 birkat-udf = { workspace = true }
 birkat-report = { workspace = true }
 birkat-audio = { workspace = true }
@@ -26,6 +27,7 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
 serde_json = { workspace = true }
 time = { workspace = true }
+walkdir = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

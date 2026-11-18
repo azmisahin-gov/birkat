@@ -19,7 +19,7 @@ use birkat_core::report::{
 use birkat_core::time_util::Timestamp;
 
 /// Rapor kurma girdisi.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct ReportBuildInput {
     /// Ses envanteri satırları: (dosya adı, codec, süre, kanal, örnekleme, hash).
     pub audio_inventory: Vec<AudioInventoryRow>,
@@ -44,7 +44,7 @@ pub struct ReportBuildInput {
 }
 
 /// Ses envanteri satırı.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AudioInventoryRow {
     /// Dosya adı.
     pub file_name: String,
@@ -65,7 +65,7 @@ pub struct AudioInventoryRow {
 }
 
 /// Transkript satırı.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TranscriptRow {
     /// Ses dosyası adı.
     pub audio_file: String,
@@ -80,7 +80,7 @@ pub struct TranscriptRow {
 }
 
 /// Kullanılan model bilgisi.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct ModelInfo {
     /// Model adı.
     pub name: String,
