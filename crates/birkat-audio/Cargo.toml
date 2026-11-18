@@ -1,0 +1,19 @@
+[package]
+name = "birkat-audio"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "BİRKÂT ses envanteri, çözümleme ve inceleme çekirdeği"
+
+[dependencies]
+birkat-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+symphonia = { workspace = true }
+hound = { workspace = true }
+time = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

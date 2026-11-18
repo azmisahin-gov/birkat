@@ -1,0 +1,20 @@
+[package]
+name = "birkat-udf"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+description = "BİRKÂT UYAP UDF okuyucu, yazıcı ve doğrulayıcı"
+
+[dependencies]
+birkat-core = { workspace = true }
+serde = { workspace = true }
+
+thiserror = { workspace = true }
+zip = { workspace = true }
+quick-xml = { workspace = true }
+base64 = { workspace = true }
+time = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
