@@ -101,6 +101,70 @@ Bunlar "tamamlandı" olarak işaretlenmemelidir:
 - Görüntü sunucusu olmayan ortamda masaüstü arayüzü açılamaz.
 - Ed25519 imza doğrulaması üretimde etkinleştirilmeli.
 
+## Whisper/Candle çıkarımı — üç kritik kural
+
+Gerçek transkripsiyon bu üçü yanlışsa **sessizce bozulur**; hata vermez,
+yalnızca anlamsız metin üretir:
+
+1. **Sabit 30 saniyelik pencere.** Kodlayıcı tam `m::N_FRAMES` (3000) mel
+   karesi bekler. Kısa kayıt sıfırla doldurulur; candle'ın `pcm_to_mel`
+   fonksiyonu ek dolgu kareleri eklediği için `narrow(2, 0, m::N_FRAMES)` ile
+   kırpılır. Aksi hâlde `narrow invalid args` veya anlamsız çıktı.
+2. **`final_linear` zorunlu.** `decoder.forward()` **gizli durum** döner,
+   sözcük dağarcığı logitleri değil. Logitler için
+   `decoder.final_linear(&hidden.i((.., seq-1.., ..)))` uygulanır. Doğrudan
+   argmax alınırsa çıktı tek harfe düşer ("Merhaba" → "Mer").
+3. **KV önbelleği.** İlk adımda istem belirteçlerinin tamamı ve
+   `flush_cache=true`; sonraki adımlarda yalnızca son belirteç ve
+   `flush_cache=false`. Her adımda tam diziyi beslemek doğrudur ama çok
+   yavaştır.
+
+Doğrulama ikilisi: `cargo run -p birkat-transcription --features whisper
+--example whisper-dogrula -- --model … --config … --tokenizer … --mel …
+--ses kayit.wav --referans metin.txt --dil tr`
+
+Model dosyaları: `model.safetensors`, `config.json`, `tokenizer.json`,
+`melfilters128.bytes` (resmî mel filtresi; analitik hesaplama birebir değil).
+Hash'ler `model-package.lock.json` içinde sabit.
+
+## Windows çapraz derleme ve paketleme
+
+```bash
+# Araçlar (bir kez)
+sudo apt-get install -y mingw-w64 nsis zip
+rustup target add x86_64-pc-windows-gnu
+
+# Paket (model ZORUNLU; eksikse hata verir)
+./scripts/package-windows.sh --model-dir /yol/model
+```
+
+- `.cargo/config.toml` linker'ı `x86_64-w64-mingw32-gcc` olarak ayarlar.
+- Üretilen `.exe` yalnızca Windows sistem DLL'lerine bağlı olmalı;
+  `libgcc`/`libwinpthread`/`libstdc` görünürse paket reddedilir.
+- NSIS'te `SetCompressor zlib` kullanılır: LZMA yoğun f16 ağırlıklarda
+  saatler sürüp yalnızca %9 kazanç sağlar.
+- NSIS mutlak yol ister (`PKG_ABS`); göreli yol lisans dosyasını bulamaz.
+- **`set -euo pipefail` tuzağı:** `cmd | grep -q` erken çıkınca SIGPIPE
+  (141) oluşur ve denetim yanlışlıkla başarısız görünür. Çıktıyı dosyaya
+  alıp `grep -c` kullanın.
+
+## Güvenlik denetimi
+
+`cargo audit` **0 açık** vermeli. `zip` 9.x, `quick-xml` 0.42, `rusqlite`
+0.43 ve `candle` 0.11 kullanılır (eski sürümler RustSec bildirimleri taşır;
+candle 0.8 vulnerable `zip 1.3.1` çekiyordu). Kalan 3 "unmaintained" uyarısı
+`.cargo/audit.toml` içinde gerekçesiyle kabul edilmiştir — gizlenmemiştir.
+
+## CI
+
+- `ci.yml`: Linux + Windows test, `clippy -D warnings`, `fmt --check`,
+  `cargo audit`, SBOM güncellik denetimi. **4/4 yeşil olmalı.**
+- `release.yml`: etikette Windows kurulum paketini üretir ve Releases'e
+  yükler. Model `MODEL_URL` değişkeninden (veya elle verilen girdiden, yoksa
+  depoda yayımlanmış varsayılan paketten) indirilir ve SHA-256 doğrulanır.
+- SBOM bayatlarsa CI kırmızı olur: `cargo metadata --format-version 1
+  --all-features > /tmp/m.json && python3 scripts/generate-sbom.py < /tmp/m.json`
+
 ## Faydalı referanslar
 
 - UDF biçimi: `docs/udf-uyumluluk.md` (ZIP + `content.xml`, karakter ofsetleri)
