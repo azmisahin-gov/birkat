@@ -112,7 +112,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let tokenizer = Tokenizer::from_file(&args.tokenizer)?;
     let mel_bytes = std::fs::read(&args.mel)?;
     let mel_filters: Vec<f32> = mel_bytes
-        .chunks_exact(4)
+        .chunks(4)
+        .filter(|c| c.len() == 4)
         .map(|c| f32::from_le_bytes([c[0], c[1], c[2], c[3]]))
         .collect();
     println!(

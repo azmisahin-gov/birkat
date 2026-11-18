@@ -134,7 +134,7 @@ pub fn discover_model_dir(data_root: impl AsRef<Path>) -> Option<ModelPaths> {
 
     adaylar
         .into_iter()
-        .map(|a| ModelPaths::from_dir(a))
+        .map(ModelPaths::from_dir)
         .find(|p| p.is_complete())
 }
 
